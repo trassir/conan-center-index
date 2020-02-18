@@ -65,6 +65,7 @@ class OpenSSLConan(ConanFile):
     url = "https://github.com/conan-io/conan-center-index"
     homepage = "https://github.com/openssl/openssl"
     license = "OpenSSL"
+    version = "1.1.1d"
     topics = ("conan", "openssl", "ssl", "tls", "encryption", "security")
     description = "A toolkit for the Transport Layer Security (TLS) and Secure Sockets Layer (SSL) protocols"
     options = {"no_threads": [True, False],
@@ -163,7 +164,7 @@ class OpenSSLConan(ConanFile):
     @property
     def _target(self):
         target = "conan-%s-%s-%s-%s-%s" % (self.settings.build_type,
-                                           self.settings.os,
+                                           str(self.settings.os).lower() if self.settings.os is not None else None,
                                            self.settings.arch,
                                            self.settings.compiler,
                                            self.settings.compiler.version)
