@@ -1,0 +1,33 @@
+env:
+  global:
+    - CONAN_USERNAME: "artem-kamyshev"
+    - CONAN_LOGIN_USERNAME: "artem-kamyshev"
+    - CONAN_CHANNEL: "ci"
+    - CONAN_UPLOAD: "UPLOAD_URL"
+
+linux: &linux
+  os: linux
+  sudo: required
+  language: python
+  python: "3.6"
+  services:
+    - docker
+matrix:
+  include:
+    - <<: *linux
+      env: CONAN_REFERENCE: "openssl/1.1.1d" CONAN_GCC_VERSIONS=4.8 CONAN_DOCKER_IMAGE=conanio/gcc48 CONAN_ARCHS=x86_64 CONAN_BUILD_TYPES=Release
+      install:
+        - chmod +x ./recipes/openssl/ALL/.travis/install.sh
+        - ./recipes/openssl/ALL/.travis/install.sh
+      script:
+        - chmod +x ./recipes/openssl/ALL/.travis/run.sh
+        - ./recipes/openssl/ALL/.travis/run.sh
+    - <<: *linux
+      env: CONAN_REFERENCE: "openssl/1.1.1d" CONAN_GCC_VERSIONS=4.8 CONAN_DOCKER_IMAGE=conanio/gcc48 CONAN_ARCHS=x86_64 CONAN_BUILD_TYPES=Debug
+      install:
+        - chmod +x ./recipes/openssl/ALL/.travis/install.sh
+        - ./recipes/openssl/ALL/.travis/install.sh
+      script:
+        - chmod +x ./recipes/openssl/ALL/.travis/run.sh
+        - ./recipes/openssl/ALL/.travis/run.sh
+                  
