@@ -16,7 +16,7 @@ on:
 
 env:
   CONAN_PASSWORD: ${{ secrets.BintrayApiKey }}
-  CONAN_REFERENCE: 'zlib/1.2.11'
+  CONAN_REFERENCE: 'zlib/1.2.11@/'
 
 jobs:
   zlib_1_2_11:
