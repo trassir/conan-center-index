@@ -5,8 +5,8 @@ from cpt.packager import ConanMultiPackager
 
 if __name__ == "__main__":
     if platform == "darwin":
-        os.environ["CONAN_USERNAME"] = "_"
-        os.environ["CONAN_CHANNEL"] = "_"
+        environ["CONAN_USERNAME"] = "_"
+        environ["CONAN_CHANNEL"] = "_"
     else:
         if not environ["CONAN_REFERENCE"].endswith("@/"):
             environ["CONAN_REFERENCE"] += "@/"
