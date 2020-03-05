@@ -70,6 +70,8 @@ jobs:
             compiler: 'apple_clang'
             compiler_version: '11.0'
             xcode_version: '11.3.1'
+            conan_username: _
+            conan_channel: _
             conan_reference: 'zlib/1.2.11'
     runs-on: ${{ matrix.os }}
     steps:
@@ -94,6 +96,8 @@ jobs:
           docker-images: ${{ matrix.docker_image }}
         env:
           CONAN_REFERENCE: ${{ matrix.conan_reference }}
+          CONAN_USERNAME: ${{ matrix.conan_username }}
+          CONAN_CHANNEL: ${{ matrix.conan_channel }}
           CONAN_VISUAL_RUNTIMES: ${{ matrix.vs_runtimes }}
           CONAN_ARCHS: ${{ matrix.archs }}
           CONAN_BUILD_TYPES: ${{ matrix.build_types }}
