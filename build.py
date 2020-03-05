@@ -11,7 +11,8 @@ if __name__ == "__main__":
             upload_only_when_stable=1,
             stable_branch_pattern="cpt-username-channel-behavior",
             stable_channel="_",
-            stable_username="_",
+            channel="_",
+            username="_",
             remotes="https://api.bintray.com/conan/trassir/conan-public"
         )
     else:
@@ -21,7 +22,8 @@ if __name__ == "__main__":
             upload_only_when_stable=1,
             stable_branch_pattern="cpt-username-channel-behavior",
             stable_channel="_",
-            stable_username="_",
+            channel="_",
+            username="_",
             remotes="https://api.bintray.com/conan/trassir/conan-public"
         )
     builder.add_common_builds(pure_c=False)
