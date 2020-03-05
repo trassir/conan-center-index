@@ -5,14 +5,14 @@ on:
     paths:
       - 'recipes/zlib/1.2.11/**'
       - 'build.py'
-      - '.github/workflows/zlib.yml'
+      - '.github/workflows/zlib-1.2.11.yml'
   push:
     branches:
       - cpt-username-channel-behavior
     paths:
       - 'recipes/zlib/1.2.11/**'
       - 'build.py'
-      - '.github/workflows/zlib.yml'
+      - '.github/workflows/zlib-1.2.11.yml'
 
 env:
   CONAN_PASSWORD: ${{ secrets.BintrayApiKey }}
