@@ -8,7 +8,7 @@ on:
       - '.github/workflows/zlib.yml'
   push:
     branches:
-      - trassir-ci
+      - cpt-username-channel-behavior
     paths:
       - 'recipes/zlib/1.2.11/**'
       - 'build.py'
