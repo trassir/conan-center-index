@@ -8,7 +8,7 @@ on:
       - '.github/workflows/jsoncpp.yml'
   push:
     branches:
-      - cpt-username-channel-behavior
+      - trassir-ci
     paths:
       - 'recipes/jsoncpp/all/**'
       - 'build.py'
