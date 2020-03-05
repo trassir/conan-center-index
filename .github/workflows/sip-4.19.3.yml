@@ -89,7 +89,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r recipes/sip/requirements.txt
+          pip install -r sources/recipes/sip/requirements.txt
       - name: Build and Optionally Upload
         uses: trassir/run-cpt@v0.2.1-trassir
         with:
