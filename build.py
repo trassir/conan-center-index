@@ -4,7 +4,7 @@ from cpt.packager import ConanMultiPackager
 
 
 if __name__ == "__main__":
-    if platform == "darwin":
+    if platform in ["darwin", "win32"]:
         environ["CONAN_USERNAME"] = "_"
         environ["CONAN_CHANNEL"] = "_"
     else:
