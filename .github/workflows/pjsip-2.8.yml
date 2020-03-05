@@ -5,14 +5,14 @@ on:
     paths:
       - 'recipes/pjsip/2.8/**'
       - 'build.py'
-      - '.github/workflows/pjsip.yml'
+      - '.github/workflows/pjsip-2.8.yml'
   push:
     branches:
       - trassir-ci
     paths:
       - 'recipes/pjsip/2.8/**'
       - 'build.py'
-      - '.github/workflows/pjsip.yml'
+      - '.github/workflows/pjsip-2.8.yml'
 
 env:
   CONAN_USERNAME: 'trassir'
