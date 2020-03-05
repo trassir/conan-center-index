@@ -13,7 +13,7 @@ class SipConan(ConanFile):
     license = "GPL2"
     homepage = "https://www.riverbankcomputing.com/software/sip/intro"
     description = "SIP comprises a code generator and a Python module"
-    url = "https://www.riverbankcomputing.com/hg/sip"    
+    url = "https://www.riverbankcomputing.com/hg/sip"
     settings = "os", "compiler", "build_type", "arch"
     options = {}
     default_options = {}
@@ -38,8 +38,6 @@ class SipConan(ConanFile):
                 ).format(
                     prefix = tools.unix_path(self.package_folder)
                 ))
-            #else:
-            #    raise("not implemented")
             self.run("make -j%d" % tools.cpu_count())
 
     def package(self):
@@ -52,6 +50,3 @@ class SipConan(ConanFile):
     def package_info(self):
         self.cpp_info.bindirs = ["bin"]
         self.cpp_info.includedirs = ["include/python2.7"]
-
-    def package_id(self):
-        self.info.header_only()
