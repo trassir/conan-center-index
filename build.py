@@ -9,7 +9,7 @@ if __name__ == "__main__":
         os.environ["CONAN_CHANNEL"] = "_"
     else:
         if not environ["CONAN_REFERENCE"].endswith("@/"):
-            os.environ["CONAN_REFERENCE"] += "@/"
+            environ["CONAN_REFERENCE"] += "@/"
     builder = ConanMultiPackager(
         login_username="trassir-ci-bot",
         upload="https://api.bintray.com/conan/trassir/conan-public",
