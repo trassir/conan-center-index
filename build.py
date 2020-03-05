@@ -8,8 +8,8 @@ if __name__ == "__main__":
         os.environ["CONAN_USERNAME"] = "_"
         os.environ["CONAN_CHANNEL"] = "_"
     else:
-        if not environ["CONAN_CHANNEL"].endswith("@/"):
-            os.environ["CONAN_CHANNEL"] += "@/"
+        if not environ["CONAN_REFERENCE"].endswith("@/"):
+            os.environ["CONAN_REFERENCE"] += "@/"
     builder = ConanMultiPackager(
         login_username="trassir-ci-bot",
         upload="https://api.bintray.com/conan/trassir/conan-public",
