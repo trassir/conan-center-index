@@ -27,19 +27,18 @@ class SipConan(ConanFile):
             pip.main(["install", "mercurial"])
         else:
             from pip._internal import main
-            main(['install', "mercurial"])
+            main.main(['install', "mercurial"])
 
     def source(self):
-        print(json.dumps(dict(os.environ), indent=4))
         self.run("hg clone {url} {folder}".format(url = self.url, folder = self._source_subfolder))
         with tools.chdir(self._source_subfolder):
             self.run("hg up -C -r {rev}".format(rev = self.version))
 
     def build(self):
         with tools.chdir(self._source_subfolder):
-            self.run("python2 build.py prepare")
-            if tools.is_apple_os(self.settings.os):
-                self.run(("python2 configure.py"
+            self.run("c:/dev/python-3.8.0/python.exe build.py prepare")
+            if tools.os_info.is_macos:
+                self.run(("c:/dev/python-3.8.0/python.exe configure.py"
                       + " --deployment-target=10.12"
                       + " -b {prefix}/bin"
                       + " -d {prefix}/lib/python2.7/site-packages"
@@ -48,14 +47,33 @@ class SipConan(ConanFile):
                 ).format(
                     prefix = tools.unix_path(self.package_folder)
                 ))
-            self.run("make -j%d" % tools.cpu_count())
+                self.run("make -j%d" % tools.cpu_count())
+            if tools.os_info.is_windows:
+                self.run(("c:/dev/python-3.8.0/python.exe configure.py"
+                      + " -b {prefix}/bin"
+                      + " -d {prefix}/lib/python2.7/site-packages"
+                      + " -e {prefix}/include/python2.7"
+                      + " -v {prefix}/share/sip/"
+                ).format(
+                    prefix = self.package_folder
+                ))
+                # cannot be bothered to fix build of siplib which we don't use anyway
+                with tools.chdir("sipgen"):
+                    self.run("nmake")
 
     def package(self):
-        with tools.chdir(self._source_subfolder):
-            self.run("make install")
-        if tools.is_apple_os(self.settings.os):
+        if tools.os_info.is_macos:
+            with tools.chdir(self._source_subfolder):
+                self.run("make install")
             with tools.chdir(self.package_folder):
                 self.run("mv lib/python2.7/site-packages lib/python2.7/lib-dynload")
+        if tools.os_info.is_windows:
+            with tools.chdir(self._source_subfolder):
+                with tools.chdir("sipgen"):
+                    self.run("nmake install")
+                with tools.chdir("siplib"):
+                    self.run("mkdir {prefix}\\include\\python2.7\\".format(prefix = self.package_folder))
+                    self.run("copy /y sip.h {prefix}\\include\\python2.7\\sip.h".format(prefix = self.package_folder))
 
     def package_info(self):
         self.cpp_info.bindirs = ["bin"]
