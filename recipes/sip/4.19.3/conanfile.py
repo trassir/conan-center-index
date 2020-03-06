@@ -24,10 +24,10 @@ class SipConan(ConanFile):
     def system_requirements(self):
         import pip
         if hasattr(pip, "main"):
-            pip.main(["install", "-r", "requirements.txt"])
+            pip.main(["install", "mercurial"])
         else:
             from pip._internal import main
-            main(['install', "-r", "requirements.txt"])
+            main(['install', "mercurial"])
 
     def source(self):
         print(json.dumps(dict(os.environ), indent=4))
