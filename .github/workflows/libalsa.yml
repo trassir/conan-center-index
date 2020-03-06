@@ -1,35 +1,28 @@
-name: zlib CI
+name: libalsa CI
 
 on:
   pull_request:
     paths:
-      - 'recipes/zlib/1.2.11/**'
+      - 'recipes/libalsa/all/**'
       - 'build.py'
-      - '.github/workflows/zlib.yml'
+      - '.github/workflows/libalsa.yml'
   push:
     branches:
       - trassir-ci
     paths:
-      - 'recipes/zlib/1.2.11/**'
+      - 'recipes/libalsa/all/**'
       - 'build.py'
-      - '.github/workflows/zlib.yml'
+      - '.github/workflows/libalsa.yml'
 
 env:
-  CONAN_USERNAME: 'trassir'
-  CONAN_LOGIN_USERNAME: 'trassir-ci-bot'
   CONAN_PASSWORD: ${{ secrets.BintrayApiKey }}
-  CONAN_UPLOAD: 'https://api.bintray.com/conan/trassir/conan-public'
-  CONAN_UPLOAD_ONLY_WHEN_STABLE: 1
-  CONAN_STABLE_CHANNEL: 'stable'
-  CONAN_STABLE_BRANCH_PATTERN: 'trassir-ci'
-  CONAN_REMOTES: 'https://api.bintray.com/conan/trassir/conan-public'
-  CONAN_REFERENCE: 'zlib/1.2.11'
 
 jobs:
-  zlib_1_2_11:
+  libalsa:
     strategy:
       matrix:
         build: ['linux-gcc4.8', 'linux-gcc7', 'linux-gcc9', 'windows-2019-release', 'windows-2019-debug', 'macos']
+        libalsa_versions: ['1.1.9']
         include:
           - build: 'linux-gcc4.8'
             os: 'ubuntu-latest'
@@ -89,12 +82,13 @@ jobs:
       - name: Build and Optionally Upload
         uses: trassir/run-cpt@v0.2.1-trassir
         with:
-          work-dir: sources/recipes/zlib/1.2.11
+          work-dir: sources/recipes/libalsa/all
           build-script: ../../../build.py
           compiler: ${{ matrix.compiler }}
           compiler-versions: ${{ matrix.compiler_version }}
           docker-images: ${{ matrix.docker_image }}
         env:
+          CONAN_REFERENCE: 'libalsa/${{ matrix.libalsa_versions }}'
           CONAN_VISUAL_RUNTIMES: ${{ matrix.vs_runtimes }}
           CONAN_ARCHS: ${{ matrix.archs }}
           CONAN_BUILD_TYPES: ${{ matrix.build_types }}
