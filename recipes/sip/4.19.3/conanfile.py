@@ -28,6 +28,9 @@ class SipConan(ConanFile):
         else:
             from pip._internal import main
             main.main(['install', "mercurial"])
+        if tools.os_info.is_windows:
+            installer = SystemPackageTool(tool=ChocolateyTool()) # Invoke choco package manager to install the package
+            installer.install("flex-bison")
 
     def source(self):
         self.run("hg clone {url} {folder}".format(url = self.url, folder = self._source_subfolder))
