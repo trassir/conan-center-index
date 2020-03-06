@@ -50,9 +50,9 @@ class PjsipConan(ConanFile):
 
     def requirements(self):
         if self.settings.os == "Linux":
-            self.requires("libasound2/1.1.0@totemic/stable")
+            self.requires("libalsa/1.1.0")
         if self.options.SSL:
-            self.requires(_openSSL+"/1.0.2@conan/stable")
+            self.requires(_openSSL+"/1.0.2")
 
     def _configure_autotools(self):
         if not self._autotools:
