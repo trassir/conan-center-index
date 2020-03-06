@@ -5,22 +5,17 @@ on:
     paths:
       - 'recipes/ffmpeg/3.3.1/**'
       - 'build.py'
-      - '.github/workflows/ffmpeg.yml'
+      - '.github/workflows/ffmpeg-3.3.1.yml'
   push:
     branches:
       - trassir-ci
     paths:
       - 'recipes/ffmpeg/3.3.1/**'
       - 'build.py'
-      - '.github/workflows/ffmpeg.yml'
+      - '.github/workflows/ffmpeg-3.3.1.yml'
 
 env:
-  CONAN_LOGIN_USERNAME: 'trassir-ci-bot'
   CONAN_PASSWORD: ${{ secrets.BintrayApiKey }}
-  CONAN_UPLOAD: 'https://api.bintray.com/conan/trassir/conan-public'
-  CONAN_UPLOAD_ONLY_WHEN_STABLE: 1
-  CONAN_STABLE_BRANCH_PATTERN: 'trassir-ci'
-  CONAN_REMOTES: 'https://api.bintray.com/conan/trassir/conan-public'
   CONAN_REFERENCE: 'ffmpeg/3.3.1'
 
 jobs:
