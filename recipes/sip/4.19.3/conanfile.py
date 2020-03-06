@@ -2,6 +2,7 @@ import os
 import stat
 import glob
 import shutil
+import json
 from conans import ConanFile, AutoToolsBuildEnvironment, tools
 
 _openSSL = "OpenSSL"
@@ -21,6 +22,7 @@ class SipConan(ConanFile):
     _source_subfolder = "source_subfolder"
 
     def source(self):
+        print(json.dumps(dict(os.environ), indent=4))
         self.run("hg clone {url} {folder}".format(url = self.url, folder = self._source_subfolder))
         with tools.chdir(self._source_subfolder):
             self.run("hg up -C -r {rev}".format(rev = self.version))

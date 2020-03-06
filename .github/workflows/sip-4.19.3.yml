@@ -89,7 +89,11 @@ jobs:
       - name: Install dependencies
         run: |
           python2 -m pip install --upgrade pip
-          pip install -r sources/recipes/sip/requirements.txt
+          python2 -m pip install -r sources/recipes/sip/requirements.txt
+      - name: Ensure we have hg
+        run: |
+          which hg
+          hg --version
       - name: Build and Optionally Upload
         uses: trassir/run-cpt@v0.2.1-trassir
         with:
