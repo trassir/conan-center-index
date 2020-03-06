@@ -21,6 +21,14 @@ class SipConan(ConanFile):
     exports = ""
     _source_subfolder = "source_subfolder"
 
+    def system_requirements(self):
+        import pip
+        if hasattr(pip, "main"):
+            pip.main(["install", "-r", "requirements.txt"])
+        else:
+            from pip._internal import main
+            main(['install', "-r", "requirements.txt"])
+
     def source(self):
         print(json.dumps(dict(os.environ), indent=4))
         self.run("hg clone {url} {folder}".format(url = self.url, folder = self._source_subfolder))
