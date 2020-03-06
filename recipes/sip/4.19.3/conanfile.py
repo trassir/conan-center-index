@@ -40,6 +40,14 @@ class SipConan(ConanFile):
         self.run("hg clone {url} {folder}".format(url = self.url, folder = self._source_subfolder))
         with tools.chdir(self._source_subfolder):
             self.run("hg up -C -r {rev}".format(rev = self.version))
+        if tools.os_info.is_windows:
+            tools.replace_in_file(os.path.join(self._source_subfolder, "build.py"),
+                                  "os.system('flex -o%s %s' % (lexer_c, lexer_l))",
+                                  "os.system('win_flex -o%s %s' % (lexer_c, lexer_l))")
+            tools.replace_in_file(os.path.join(self._source_subfolder, "build.py"),
+                                  "os.system('bison -y -d -o %s %s' % (parser_c, parser_y))",
+                                  "os.system('win_bison -y -d -o %s %s' % (parser_c, parser_y))")
+
 
     def build(self):
         with tools.chdir(self._source_subfolder):
