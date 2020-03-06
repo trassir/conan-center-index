@@ -53,7 +53,7 @@ class SipConan(ConanFile):
                 self.run(("python configure.py"
                       + " --deployment-target=10.12"
                       + " -b {prefix}/bin"
-                      + " -d {prefix}/site-packages"
+                      + " -d {prefix}/lib-dynload"
                       + " -e {prefix}/include"
                       + " -v {prefix}/share/sip"
                 ).format(
@@ -77,8 +77,6 @@ class SipConan(ConanFile):
         if tools.os_info.is_macos:
             with tools.chdir(self._source_subfolder):
                 self.run("make install")
-            with tools.chdir(self.package_folder):
-                self.run("mv site-packages lib-dynload")
         if tools.os_info.is_windows:
             with tools.chdir(self._source_subfolder):
                 # partial execution of installation step due to siplib not being built
