@@ -87,6 +87,8 @@ jobs:
       - name: Build and Optionally Upload
         uses: trassir/run-cpt@custom-installation
         with:
+          install: custom
+          custom_package: git+https://github.com/trassir/conan-package-tools@stable-channel-detection
           work-dir: sources/recipes/jsoncpp/all
           build-script: ../../../build.py
           compiler: ${{ matrix.compiler }}
