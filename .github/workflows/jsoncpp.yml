@@ -85,7 +85,7 @@ jobs:
         with:
           python-version: '3.x'
       - name: Build and Optionally Upload
-        uses: trassir/run-cpt@v0.2.1-trassir
+        uses: trassir/run-cpt@custom-installation
         with:
           work-dir: sources/recipes/jsoncpp/all
           build-script: ../../../build.py
