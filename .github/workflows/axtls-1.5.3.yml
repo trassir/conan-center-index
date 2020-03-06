@@ -5,31 +5,26 @@ on:
     paths:
       - 'recipes/axtls/1.5.3/**'
       - 'build.py'
-      - '.github/workflows/axtls.yml'
+      - '.github/workflows/axtls-1.5.3.yml'
   push:
     branches:
       - trassir-ci
     paths:
       - 'recipes/axtls/1.5.3/**'
       - 'build.py'
-      - '.github/workflows/axtls.yml'
+      - '.github/workflows/axtls-1.5.3.yml'
 
 env:
-  CONAN_USERNAME: 'trassir'
-  CONAN_LOGIN_USERNAME: 'trassir-ci-bot'
   CONAN_PASSWORD: ${{ secrets.BintrayApiKey }}
-  CONAN_UPLOAD: 'https://api.bintray.com/conan/trassir/conan-public'
-  CONAN_UPLOAD_ONLY_WHEN_STABLE: 1
-  CONAN_STABLE_CHANNEL: 'stable'
-  CONAN_STABLE_BRANCH_PATTERN: 'trassir-ci'
-  CONAN_REMOTES: 'https://api.bintray.com/conan/trassir/conan-public'
   CONAN_REFERENCE: 'axtls/1.5.3'
 
 jobs:
   axtls:
     strategy:
       matrix:
-        build: ['linux-gcc4.8', 'linux-gcc7', 'linux-gcc9', 'windows-2019-release', 'windows-2019-debug', 'macos']
+        # uncomment when conanfile.py ready
+        # build: ['linux-gcc4.8', 'linux-gcc7', 'linux-gcc9', 'windows-2019-release', 'windows-2019-debug', 'macos']
+        build: ['macos']
         include:
           - build: 'linux-gcc4.8'
             os: 'ubuntu-latest'

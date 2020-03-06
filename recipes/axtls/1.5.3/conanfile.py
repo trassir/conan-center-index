@@ -21,10 +21,10 @@ class AxtlsConan(ConanFile):
 
     def _make(self, args):
         self.run("make -C {source} {args}".format(source = self._source_subfolder, args = args))
-    
+
     def _configure(self):
         prefix = tools.unix_path(self.package_folder)
-        
+
         shutil.copyfile(
             os.path.join(self._source_subfolder,"config", "linuxconfig"),
             os.path.join(self._source_subfolder,"config", ".config"))
@@ -41,8 +41,8 @@ class AxtlsConan(ConanFile):
             tools.replace_in_file(os.path.join(self._source_subfolder, "config", "makefile.conf"),
                                   "LDSHARED = -shared",
                                   "LDSHARED = -dynamiclib")
-        self._make("oldconfig")            
-    
+        self._make("oldconfig")
+
     def source(self):
         # download sources
         url = "https://sourceforge.net/projects/axtls/files/{version}/axTLS-{version}.tar.gz".format(
