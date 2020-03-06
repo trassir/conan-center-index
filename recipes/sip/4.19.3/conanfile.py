@@ -36,9 +36,9 @@ class SipConan(ConanFile):
 
     def build(self):
         with tools.chdir(self._source_subfolder):
-            self.run("c:/dev/python-3.8.0/python.exe build.py prepare")
+            self.run("python build.py prepare")
             if tools.os_info.is_macos:
-                self.run(("c:/dev/python-3.8.0/python.exe configure.py"
+                self.run(("python configure.py"
                       + " --deployment-target=10.12"
                       + " -b {prefix}/bin"
                       + " -d {prefix}/lib/python2.7/site-packages"
@@ -49,7 +49,7 @@ class SipConan(ConanFile):
                 ))
                 self.run("make -j%d" % tools.cpu_count())
             if tools.os_info.is_windows:
-                self.run(("c:/dev/python-3.8.0/python.exe configure.py"
+                self.run(("python configure.py"
                       + " -b {prefix}/bin"
                       + " -d {prefix}/lib/python2.7/site-packages"
                       + " -e {prefix}/include/python2.7"
@@ -69,6 +69,7 @@ class SipConan(ConanFile):
                 self.run("mv lib/python2.7/site-packages lib/python2.7/lib-dynload")
         if tools.os_info.is_windows:
             with tools.chdir(self._source_subfolder):
+                # partial execution of installation step due to siplib not being built
                 with tools.chdir("sipgen"):
                     self.run("nmake install")
                 with tools.chdir("siplib"):
