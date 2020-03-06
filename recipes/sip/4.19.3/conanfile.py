@@ -5,8 +5,6 @@ import shutil
 import json
 from conans import ConanFile, AutoToolsBuildEnvironment, tools
 
-_openSSL = "OpenSSL"
-
 # based on https://github.com/conan-community/conan-ncurses/blob/stable/6.1/conanfile.py
 class SipConan(ConanFile):
     name = "sip"
