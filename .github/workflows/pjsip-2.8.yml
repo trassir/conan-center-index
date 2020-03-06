@@ -15,14 +15,7 @@ on:
       - '.github/workflows/pjsip-2.8.yml'
 
 env:
-  CONAN_USERNAME: 'trassir'
-  CONAN_LOGIN_USERNAME: 'trassir-ci-bot'
   CONAN_PASSWORD: ${{ secrets.BintrayApiKey }}
-  CONAN_UPLOAD: 'https://api.bintray.com/conan/trassir/conan-public'
-  CONAN_UPLOAD_ONLY_WHEN_STABLE: 1
-  CONAN_STABLE_CHANNEL: 'stable'
-  CONAN_STABLE_BRANCH_PATTERN: 'trassir-ci'
-  CONAN_REMOTES: 'https://api.bintray.com/conan/trassir/conan-public'
   CONAN_REFERENCE: 'pjsip/2.8'
 
 jobs:
@@ -95,7 +88,6 @@ jobs:
           compiler-versions: ${{ matrix.compiler_version }}
           docker-images: ${{ matrix.docker_image }}
         env:
-          CONAN_OPTIONS: "pjsip:shared=True"
           CONAN_VISUAL_RUNTIMES: ${{ matrix.vs_runtimes }}
           CONAN_ARCHS: ${{ matrix.archs }}
           CONAN_BUILD_TYPES: ${{ matrix.build_types }}

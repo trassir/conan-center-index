@@ -13,7 +13,7 @@ class PjsipConan(ConanFile):
     license = "GPL2"
     homepage = "https://github.com/pjsip/pjproject/"
     description = "PJSIP is a free and open source multimedia communication library written in C language implementing standard based protocols such as SIP, SDP, RTP, STUN, TURN, and ICE."
-    url = "https://github.com/jens-totemic/conan-pjsip"    
+    url = "https://github.com/jens-totemic/conan-pjsip"
     settings = "os", "compiler", "build_type", "arch"
     options = {"shared": [True, False],
                "SSL": [True, False],
@@ -43,7 +43,7 @@ class PjsipConan(ConanFile):
         if not tools.os_info.is_windows:
             configure_file = os.path.join(self._source_subfolder, "configure")
             stc = os.stat(configure_file)
-            os.chmod(configure_file, stc.st_mode | stat.S_IEXEC)        
+            os.chmod(configure_file, stc.st_mode | stat.S_IEXEC)
             aconfigure_file = os.path.join(self._source_subfolder, "aconfigure")
             stac = os.stat(aconfigure_file)
             os.chmod(aconfigure_file, stac.st_mode | stat.S_IEXEC)
@@ -60,7 +60,7 @@ class PjsipConan(ConanFile):
             # Getting build errors when cross-compiling webrtc on ARM
             # since we don't use it, just disable it for now
             args = [] # "--disable-libwebrtc"
-            if self.options.shared: 
+            if self.options.shared:
                 args.append("--enable-shared")
             if self.options.SSL:
                 openSSLroot = self.deps_cpp_info[_openSSL].rootpath
@@ -175,7 +175,7 @@ class PjsipConan(ConanFile):
             # exclude all libraries from dependencies here, they are separately included
             self.copy_cleaned(pkg_config.libs_only_l, "-l", self.cpp_info.libs, excluded_dep_libs) #["ssl", "crypto", "z"]
             self.output.info("libs: %s" % self.cpp_info.libs)
-            self.output.info("libs excluded: %s" % excluded_dep_libs)        
+            self.output.info("libs excluded: %s" % excluded_dep_libs)
 
             self.copy_prefix_merged(pkg_config.libs_only_other, "-framework", self.cpp_info.exelinkflags)
             self.output.info("exelinkflags: %s" % self.cpp_info.exelinkflags)
