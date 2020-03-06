@@ -85,15 +85,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v1
         with:
-          python-version: '2.7'
-      - name: Install dependencies
-        run: |
-          python2 -m pip install --upgrade pip
-          python2 -m pip install -r sources/recipes/sip/requirements.txt
-      - name: Ensure we have hg
-        run: |
-          which hg
-          hg --version
+          python-version: '3.x'
       - name: Build and Optionally Upload
         uses: trassir/run-cpt@v0.2.1-trassir
         with:
