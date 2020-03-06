@@ -3,33 +3,26 @@ name: openal CI
 on:
   pull_request:
     paths:
-      - 'recipes/openal/1.19.0/**'
+      - 'recipes/openal/all/**'
       - 'build.py'
       - '.github/workflows/openal.yml'
   push:
     branches:
       - trassir-ci
     paths:
-      - 'recipes/openal/1.19.0/**'
+      - 'recipes/openal/all/**'
       - 'build.py'
       - '.github/workflows/openal.yml'
 
 env:
-  CONAN_USERNAME: 'trassir'
-  CONAN_LOGIN_USERNAME: 'trassir-ci-bot'
   CONAN_PASSWORD: ${{ secrets.BintrayApiKey }}
-  CONAN_UPLOAD: 'https://api.bintray.com/conan/trassir/conan-public'
-  CONAN_UPLOAD_ONLY_WHEN_STABLE: 1
-  CONAN_STABLE_CHANNEL: 'stable'
-  CONAN_STABLE_BRANCH_PATTERN: 'trassir-ci'
-  CONAN_REMOTES: 'https://api.bintray.com/conan/trassir/conan-public'
-  CONAN_REFERENCE: 'openal/1.19.0'
 
 jobs:
   openal:
     strategy:
       matrix:
         build: ['linux-gcc4.8', 'linux-gcc7', 'linux-gcc9', 'windows-2019-release', 'windows-2019-debug', 'macos']
+        openal_versions: ['1.19.0', '1.19.1', '1.20.1']
         include:
           - build: 'linux-gcc4.8'
             os: 'ubuntu-latest'
@@ -95,6 +88,7 @@ jobs:
           compiler-versions: ${{ matrix.compiler_version }}
           docker-images: ${{ matrix.docker_image }}
         env:
+          CONAN_REFERENCE: 'openal/${{ matrix.openal_versions }}'
           CONAN_OPTIONS: "openal:shared=True"
           CONAN_VISUAL_RUNTIMES: ${{ matrix.vs_runtimes }}
           CONAN_ARCHS: ${{ matrix.archs }}
