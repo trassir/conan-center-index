@@ -46,7 +46,6 @@ class SipConan(ConanFile):
                                   "os.system('bison -y -d -o %s %s' % (parser_c, parser_y))",
                                   "os.system('win_bison -y -d -o %s %s' % (parser_c, parser_y))")
 
-
     def build(self):
         with tools.chdir(self._source_subfolder):
             self.run("python build.py prepare")
@@ -54,9 +53,9 @@ class SipConan(ConanFile):
                 self.run(("python configure.py"
                       + " --deployment-target=10.12"
                       + " -b {prefix}/bin"
-                      + " -d {prefix}/lib/python2.7/site-packages"
-                      + " -e {prefix}/include/python2.7"
-                      + " -v {prefix}/share/sip/"
+                      + " -d {prefix}/site-packages"
+                      + " -e {prefix}/include"
+                      + " -v {prefix}/share/sip"
                 ).format(
                     prefix = tools.unix_path(self.package_folder)
                 ))
@@ -64,9 +63,9 @@ class SipConan(ConanFile):
             if tools.os_info.is_windows:
                 self.run(("python configure.py"
                       + " -b {prefix}/bin"
-                      + " -d {prefix}/lib/python2.7/site-packages"
-                      + " -e {prefix}/include/python2.7"
-                      + " -v {prefix}/share/sip/"
+                      + " -d {prefix}/site-packages"
+                      + " -e {prefix}/include"
+                      + " -v {prefix}/share/sip"
                 ).format(
                     prefix = self.package_folder
                 ))
@@ -79,16 +78,16 @@ class SipConan(ConanFile):
             with tools.chdir(self._source_subfolder):
                 self.run("make install")
             with tools.chdir(self.package_folder):
-                self.run("mv lib/python2.7/site-packages lib/python2.7/lib-dynload")
+                self.run("mv site-packages lib-dynload")
         if tools.os_info.is_windows:
             with tools.chdir(self._source_subfolder):
                 # partial execution of installation step due to siplib not being built
                 with tools.chdir("sipgen"):
                     self.run("nmake install")
                 with tools.chdir("siplib"):
-                    self.run("mkdir {prefix}\\include\\python2.7\\".format(prefix = self.package_folder))
-                    self.run("copy /y sip.h {prefix}\\include\\python2.7\\sip.h".format(prefix = self.package_folder))
+                    self.run("mkdir {prefix}\\include\\".format(prefix = self.package_folder))
+                    self.run("copy /y sip.h {prefix}\\include\\sip.h".format(prefix = self.package_folder))
 
     def package_info(self):
         self.cpp_info.bindirs = ["bin"]
-        self.cpp_info.includedirs = ["include/python2.7"]
+        self.cpp_info.includedirs = ["include"]

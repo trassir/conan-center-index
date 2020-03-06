@@ -22,7 +22,7 @@ jobs:
   sip:
     strategy:
       matrix:
-        # uncomment this when resipe is ready
+        # uncomment this when recipe is ready
         # build: ['linux-gcc4.8', 'linux-gcc7', 'linux-gcc9', 'windows-2019-release', 'windows-2019-debug', 'macos']
         build: ['windows-2019-release', 'windows-2019-debug', 'macos']
         include:
