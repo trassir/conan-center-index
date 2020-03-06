@@ -1,0 +1,73 @@
+name: c-ares-1.15.0 CI
+
+on:
+  pull_request:
+    paths:
+      - 'recipes/c-ares/all/**'
+      - 'build.py'
+      - '.github/workflows/c-ares-1.15.0.yml'
+  push:
+    branches:
+      - master
+    paths:
+      - 'recipes/c-ares/all/**'
+      - 'build.py'
+      - '.github/workflows/c-ares-1.15.0.yml'
+
+env:
+  CONAN_USERNAME: 'trassir'
+  CONAN_LOGIN_USERNAME: 'trassir-ci-bot'
+  CONAN_PASSWORD: ${{ secrets.BintrayApiKey }}
+  CONAN_STABLE_CHANNEL: 'stable'
+  CONAN_UPLOAD: 'https://api.bintray.com/conan/trassir/conan-public'
+  CONAN_UPLOAD_ONLY_WHEN_STABLE: 1
+  CONAN_STABLE_BRANCH_PATTERN: 'trassir-ci'
+  CONAN_REMOTES: 'https://api.bintray.com/conan/trassir/conan-public'
+  CONAN_REFERENCE: 'c-ares/1.15.0'
+
+jobs:
+  c-ares_1_15_0:
+    strategy:
+      matrix:
+        build: ['linux-gcc4.8', 'linux-gcc7']
+        include:
+          - build: 'linux-gcc4.8'
+            os: 'ubuntu-latest'
+            compiler: 'gcc'
+            compiler_version: '4.8'
+            docker_image: 'conanio/gcc48'
+            build_types: 'Release,Debug'
+            archs: 'x86,x86_64'
+          - build: 'linux-gcc7'
+            os: 'ubuntu-latest'
+            compiler: 'gcc'
+            compiler_version: '7'
+            docker_image: 'conanio/gcc7'
+            build_types: 'Release,Debug'
+            archs: 'x86,x86_64'
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Configure git
+        run: git config --global core.autocrlf input
+        shell: bash
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          path: sources
+      - name: Setup Python
+        uses: actions/setup-python@v1
+        with:
+          python-version: '3.x'
+      - name: Build and Optionally Upload
+        uses: trassir/run-cpt@v0.2.1-trassir
+        with:
+          work-dir: sources/recipes/c-ares/1.15.0
+          build-script: ../../../build.py
+          compiler: ${{ matrix.compiler }}
+          compiler-versions: ${{ matrix.compiler_version }}
+          docker-images: ${{ matrix.docker_image }}
+        env:
+          CONAN_VISUAL_RUNTIMES: ${{ matrix.vs_runtimes }}
+          CONAN_ARCHS: ${{ matrix.archs }}
+          CONAN_BUILD_TYPES: ${{ matrix.build_types }}
+          DEVELOPER_DIR: /Applications/Xcode_${{ matrix.xcode_version }}.app/Contents/Developer
