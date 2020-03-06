@@ -1,4 +1,4 @@
-name: axtls CI
+name: axtls-1.5.3 CI
 
 on:
   pull_request:
