@@ -1,4 +1,4 @@
-name: ffmpeg CI
+name: ffmpeg-3.3.1 CI
 
 on:
   pull_request:
