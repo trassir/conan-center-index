@@ -1,18 +1,18 @@
-name: openssl-1.0.0t CI
+name: openssl-1.0.2r CI
 
 on:
   pull_request:
     paths:
       - 'recipes/openssl/ALL/**'
       - 'build.py'
-      - '.github/workflows/openssl-1.0.0t.yml'
+      - '.github/workflows/openssl-1.0.2r.yml'
   push:
     branches:
       - master
     paths:
       - 'recipes/openssl/ALL/**'
       - 'build.py'
-      - '.github/workflows/openssl-1.0.0t.yml'
+      - '.github/workflows/openssl-1.0.2r.yml'
 
 env:
   CONAN_USERNAME: 'trassir'
@@ -23,7 +23,7 @@ env:
   CONAN_UPLOAD_ONLY_WHEN_STABLE: 1
   CONAN_STABLE_BRANCH_PATTERN: 'trassir-ci'
   CONAN_REMOTES: 'https://api.bintray.com/conan/trassir/conan-public'
-  CONAN_REFERENCE: 'openssl/1.0.0t'
+  CONAN_REFERENCE: 'openssl/1.0.2r'
 
 jobs:
   c-ares_1_15_0:
