@@ -88,7 +88,7 @@ jobs:
         uses: trassir/run-cpt@custom-installation
         with:
           install: custom
-          custom_package: git+https://github.com/trassir/conan-package-tools@stable-channel-detection
+          custom_package: git+https://github.com/trassir/conan-package-tools@fix-479
           work-dir: sources/recipes/jsoncpp/all
           build-script: ../../../build.py
           compiler: ${{ matrix.compiler }}
