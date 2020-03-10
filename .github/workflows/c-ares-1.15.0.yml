@@ -61,7 +61,7 @@ jobs:
       - name: Build and Optionally Upload
         uses: trassir/run-cpt@v0.2.1-trassir
         with:
-          work-dir: sources/recipes/c-ares/1.15.0
+          work-dir: sources/recipes/c-ares/all
           build-script: ../../../build.py
           compiler: ${{ matrix.compiler }}
           compiler-versions: ${{ matrix.compiler_version }}

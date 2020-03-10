@@ -61,7 +61,7 @@ jobs:
       - name: Build and Optionally Upload
         uses: trassir/run-cpt@v0.2.1-trassir
         with:
-          work-dir: sources/recipes/openssl/1.0.0t
+          work-dir: sources/recipes/openssl/ALL
           build-script: ../../../build.py
           compiler: ${{ matrix.compiler }}
           compiler-versions: ${{ matrix.compiler_version }}
