@@ -17,6 +17,7 @@ on:
 env:
   CONAN_PASSWORD: ${{ secrets.BintrayApiKey }}
   CONAN_REFERENCE: 'pjsip/2.8'
+  IS_PURE_C: true
 
 jobs:
   pjsip:
