@@ -37,6 +37,10 @@ class PjsipConan(ConanFile):
             del self.options.fPIC
             del self.options.shared
 
+    def configure(self):
+        del self.settings.compiler.libcxx
+        del self.settings.compiler.cppstd
+        
     def source(self):
         tools.get("%s/archive/%s.zip" % (self.homepage, self.version))
         os.rename("pjproject-%s" % self.version, self._source_subfolder)
