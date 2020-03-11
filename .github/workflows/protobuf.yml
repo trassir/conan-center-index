@@ -18,7 +18,7 @@ env:
   CONAN_PASSWORD: ${{ secrets.BintrayApiKey }}
 
 jobs:
-  c-ares:
+  protobuf:
     strategy:
       matrix:
         build: ['linux-gcc4.8', 'linux-gcc7']
