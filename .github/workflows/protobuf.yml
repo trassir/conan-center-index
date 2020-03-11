@@ -54,6 +54,9 @@ jobs:
       - name: Build and Optionally Upload
         uses: trassir/run-cpt@v0.2.2-trassir
         with:
+          install: custom
+          # TODO: replace when https://github.com/conan-io/conan-package-tools/issues/479 will be fixed upstream
+          custom-package: git+https://github.com/trassir/conan-package-tools@fix-479-trassir
           work-dir: sources/recipes/protobuf/3.9.x
           build-script: ../../../build.py
           compiler: ${{ matrix.compiler }}
