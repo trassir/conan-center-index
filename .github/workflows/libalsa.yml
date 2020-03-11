@@ -1,28 +1,28 @@
-name: openssl CI
+name: libalsa CI
 
 on:
   pull_request:
     paths:
-      - 'recipes/openssl/**'
+      - 'recipes/libalsa/all/**'
       - 'build.py'
-      - '.github/workflows/openssl.yml'
+      - '.github/workflows/libalsa.yml'
   push:
     branches:
       - trassir-ci
     paths:
-      - 'recipes/openssl/**'
+      - 'recipes/libalsa/all/**'
       - 'build.py'
-      - '.github/workflows/openssl.yml'
+      - '.github/workflows/libalsa.yml'
 
 env:
   CONAN_PASSWORD: ${{ secrets.BintrayApiKey }}
 
 jobs:
-  openssl:
+  libalsa:
     strategy:
       matrix:
         build: ['linux-gcc4.8', 'linux-gcc7', 'linux-gcc9', 'windows-2019-release', 'windows-2019-debug', 'macos']
-        openssl_versions: ['1.0.2r', '1.1.0l', '1.1.1c', '1.1.1d']
+        libalsa_versions: ['1.1.9']
         include:
           - build: 'linux-gcc4.8'
             os: 'ubuntu-latest'
@@ -80,19 +80,16 @@ jobs:
         with:
           python-version: '3.x'
       - name: Build and Optionally Upload
-        uses: trassir/run-cpt@enhanced
+        uses: trassir/run-cpt@v0.2.1-trassir
         with:
-          install: custom
-          # TODO: replace when https://github.com/conan-io/conan-package-tools/issues/479 will be fixed upstream
-          custom_package: git+https://github.com/trassir/conan-package-tools@fix-479-trassir
-          work-dir: sources/recipes/openssl/ALL
+          work-dir: sources/recipes/libalsa/all
           build-script: ../../../build.py
           compiler: ${{ matrix.compiler }}
           compiler-versions: ${{ matrix.compiler_version }}
           docker-images: ${{ matrix.docker_image }}
         env:
+          CONAN_REFERENCE: 'libalsa/${{ matrix.libalsa_versions }}'
           CONAN_VISUAL_RUNTIMES: ${{ matrix.vs_runtimes }}
           CONAN_ARCHS: ${{ matrix.archs }}
           CONAN_BUILD_TYPES: ${{ matrix.build_types }}
-          CONAN_REFERENCE: openssl/${{ matrix.openssl_versions }}
           DEVELOPER_DIR: /Applications/Xcode_${{ matrix.xcode_version }}.app/Contents/Developer
