@@ -54,7 +54,7 @@ jobs:
       - name: Build and Optionally Upload
         uses: trassir/run-cpt@v0.2.1-trassir
         with:
-          work-dir: sources/recipes/c-ares/all
+          work-dir: sources/recipes/protobuf/3.9.x
           build-script: ../../../build.py
           compiler: ${{ matrix.compiler }}
           compiler-versions: ${{ matrix.compiler_version }}
