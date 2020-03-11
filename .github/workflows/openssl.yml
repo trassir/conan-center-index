@@ -84,7 +84,7 @@ jobs:
         with:
           install: custom
           # TODO: replace when https://github.com/conan-io/conan-package-tools/issues/479 will be fixed upstream
-          custom_package: git+https://github.com/trassir/conan-package-tools@fix-479-trassir
+          custom-package: git+https://github.com/trassir/conan-package-tools@fix-479-trassir
           work-dir: sources/recipes/openssl/ALL
           build-script: ../../../build.py
           compiler: ${{ matrix.compiler }}
