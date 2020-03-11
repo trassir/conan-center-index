@@ -43,6 +43,10 @@ class AxtlsConan(ConanFile):
                                   "LDSHARED = -dynamiclib")
         self._make("oldconfig")
 
+    def configure(self):
+        del self.settings.compiler.libcxx
+        del self.settings.compiler.cppstd
+        
     def source(self):
         # download sources
         url = "https://sourceforge.net/projects/axtls/files/{version}/axTLS-{version}.tar.gz".format(
@@ -69,4 +73,3 @@ class AxtlsConan(ConanFile):
     def package_info(self):
         self.env_info.CMAKE_PREFIX_PATH.append(self.package_folder)
         self.cpp_info.libs = ["axtls"]
-
