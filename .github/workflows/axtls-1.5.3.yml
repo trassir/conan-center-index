@@ -17,6 +17,7 @@ on:
 env:
   CONAN_PASSWORD: ${{ secrets.BintrayApiKey }}
   CONAN_REFERENCE: 'axtls/1.5.3'
+  IS_PURE_C: true
 
 jobs:
   axtls:
