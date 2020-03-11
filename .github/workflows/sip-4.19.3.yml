@@ -17,6 +17,7 @@ on:
 env:
   CONAN_PASSWORD: ${{ secrets.BintrayApiKey }}
   CONAN_REFERENCE: 'sip/4.19.3'
+  IS_PURE_C: true
 
 jobs:
   sip:
