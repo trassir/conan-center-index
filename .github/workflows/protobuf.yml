@@ -52,7 +52,7 @@ jobs:
         with:
           python-version: '3.x'
       - name: Build and Optionally Upload
-        uses: trassir/run-cpt@v0.2.1-trassir
+        uses: trassir/run-cpt@v0.2.2-trassir
         with:
           work-dir: sources/recipes/protobuf/3.9.x
           build-script: ../../../build.py
