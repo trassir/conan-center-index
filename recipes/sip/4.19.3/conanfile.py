@@ -34,6 +34,10 @@ class SipConan(ConanFile):
             installer.install("bison")
             installer.install("flex")
 
+    def configure(self):
+        del self.settings.compiler.libcxx
+        del self.settings.compiler.cppstd
+        
     def source(self):
         self.run("hg clone {url} {folder}".format(url = self.url, folder = self._source_subfolder))
         with tools.chdir(self._source_subfolder):
