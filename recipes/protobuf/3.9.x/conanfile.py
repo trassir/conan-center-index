@@ -1,27 +1,39 @@
-from conans import tools, CMake
-from conanfile_base import ConanFileBase
-from conans.tools import Version
+import os
+from conans import ConanFile, CMake, tools
 from conans.errors import ConanInvalidConfiguration
+from conans.tools import Version
 
 
-class ConanFileDefault(ConanFileBase):
-    name = ConanFileBase._base_name
-    version = ConanFileBase.version
-    exports = ConanFileBase.exports + ["protobuf.patch"]
-
+class ProtobufConan(ConanFile):
+    name = "protobuf"
+    description = "Protocol Buffers - Google's data interchange format"
+    topics = ("conan", "protobuf", "protocol-buffers", "protocol-compiler", "serialization", "rpc", "protocol-compiler")
+    url = "https://github.com/conan-io/conan-center-index"
+    homepage = "https://github.com/protocolbuffers/protobuf"
+    license = "BSD-3-Clause"
+    exports_sources = ["CMakeLists.txt", "protobuf.patch"]
+    generators = "cmake"
+    short_paths = True
     settings = "os", "arch", "compiler", "build_type"
-    options = {"shared": [True, False],
-               "with_zlib": [True, False],
-               "fPIC": [True, False],
-               "lite": [True, False]}
-    default_options = {"with_zlib": False,
-                       "shared": False,
-                       "fPIC": True,
-                       "lite": False}
+    options = {"shared": [True, False], "with_zlib": [True, False], "fPIC": [True, False], "lite": [True, False]}
+    default_options = {"with_zlib": False, "shared": False, "fPIC": True, "lite": False}
+
+    @property
+    def _source_subfolder(self):
+        return "source_subfolder"
+
+    @property
+    def _build_subfolder(self):
+        return "build_subfolder"
 
     @property
     def _is_clang_x86(self):
         return self.settings.compiler == "clang" and self.settings.arch == "x86"
+
+    def source(self):
+        tools.get(**self.conan_data["sources"][self.version])
+        extracted_folder = self.name + "-" + self.version
+        os.rename(extracted_folder, self._source_subfolder)
 
     def configure(self):
         if self.settings.os == "Windows" and self.settings.compiler == "Visual Studio":
@@ -36,7 +48,7 @@ class ConanFileDefault(ConanFileBase):
             self.requires("zlib/1.2.11")
 
     def _configure_cmake(self):
-        cmake = CMake(self, set_cmake_flags=True)
+        cmake = CMake(self)
         cmake.definitions["protobuf_BUILD_TESTS"] = False
         cmake.definitions["protobuf_WITH_ZLIB"] = self.options.with_zlib
         cmake.definitions["protobuf_BUILD_PROTOC_BINARIES"] = not self.options.lite
@@ -55,7 +67,10 @@ class ConanFileDefault(ConanFileBase):
         self.copy("LICENSE", dst="licenses", src=self._source_subfolder)
         cmake = self._configure_cmake()
         cmake.install()
-        self.copy("*.pdb", dst="lib", src=self._build_subfolder, keep_path=False)
+        tools.rmdir(os.path.join(self.package_folder, "lib", "cmake"))
+        tools.rmdir(os.path.join(self.package_folder, "cmake"))
+        tools.rmdir(os.path.join(self.package_folder, "lib", "pkgconfig"))
+
 
     def package_info(self):
         self.cpp_info.libs = tools.collect_libs(self)
@@ -69,3 +84,5 @@ class ConanFileDefault(ConanFileBase):
         if self.settings.os == "Windows":
             if self.options.shared:
                 self.cpp_info.defines = ["PROTOBUF_USE_DLLS"]
+        self.cpp_info.names["cmake_find_package"] = "Protobuf"
+        self.cpp_info.names["cmake_find_package_multi"] = "Protobuf"
