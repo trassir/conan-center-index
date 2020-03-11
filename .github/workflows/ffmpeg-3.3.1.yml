@@ -17,6 +17,7 @@ on:
 env:
   CONAN_PASSWORD: ${{ secrets.BintrayApiKey }}
   CONAN_REFERENCE: 'ffmpeg/3.3.1'
+  IS_PURE_C: true
 
 jobs:
   ffmpeg_1_2_11:
