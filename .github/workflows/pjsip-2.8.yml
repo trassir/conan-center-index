@@ -1,4 +1,4 @@
-name: pjsip CI
+name: pjsip-2.8 CI
 
 on:
   pull_request:
