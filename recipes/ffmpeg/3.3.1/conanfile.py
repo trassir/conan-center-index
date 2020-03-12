@@ -97,9 +97,7 @@ class FFMpegConan(ConanFile):
         return self.settings.compiler == 'Visual Studio'
 
     def source(self):
-        source_url = "http://ffmpeg.org/releases/ffmpeg-%s.tar.bz2" % self.version
-        tools.get(source_url,
-                  sha256="fcb2cd7b77fcb66a00abccd5a04e34342a02cab9f89626f28cf1abca715b6730")
+        tools.get(**self.conan_data["sources"][self.version])
         extracted_dir = self.name + "-" + self.version
         os.rename(extracted_dir, self._source_subfolder)
 
