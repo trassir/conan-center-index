@@ -13,7 +13,7 @@ class AxtlsConan(ConanFile):
     settings = "os", "compiler", "build_type", "arch"
     options = {}
     default_options = ""
-    exports = [
+    export_sources = [
         "osx10_compat.patch",
         "SNI.patch",
     ]
@@ -46,12 +46,10 @@ class AxtlsConan(ConanFile):
     def configure(self):
         del self.settings.compiler.libcxx
         del self.settings.compiler.cppstd
-        
+
     def source(self):
         # download sources
-        url = "https://sourceforge.net/projects/axtls/files/{version}/axTLS-{version}.tar.gz".format(
-            version = self.version)
-        tools.get(url, sha1 = "bf3ad560410d3de5825696676d58d42ac0c41516")
+        tools.get(**self.conan_data["sources"][self.version])
 
         # check recipe conistency
         tools.check_with_algorithm_sum("sha1", "osx10_compat.patch", "e211d33b1198e932ac251a811b783583ce1ec278")
