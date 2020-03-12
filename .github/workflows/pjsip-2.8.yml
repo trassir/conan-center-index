@@ -34,6 +34,7 @@ jobs:
             xcode_version: '11.3.1'
     runs-on: ${{ matrix.os }}
     steps:
+      - run: brew install pkg-config
       - name: Configure git
         run: git config --global core.autocrlf input
         shell: bash
@@ -45,10 +46,6 @@ jobs:
         uses: actions/setup-python@v1
         with:
           python-version: '3.x'
-      - name: GitHub Action for Homebrew
-        uses: artemnovichkov/action-homebrew@0.1.0
-        with:
-          args: install pkg-config
       - name: Build and Optionally Upload
         uses: trassir/run-cpt@v0.2.2-trassir
         with:
