@@ -40,9 +40,9 @@ class PjsipConan(ConanFile):
     def configure(self):
         del self.settings.compiler.libcxx
         del self.settings.compiler.cppstd
-        
+
     def source(self):
-        tools.get("%s/archive/%s.zip" % (self.homepage, self.version))
+        tools.get(**self.conan_data["sources"][self.version])
         os.rename("pjproject-%s" % self.version, self._source_subfolder)
         if not tools.os_info.is_windows:
             configure_file = os.path.join(self._source_subfolder, "configure")
