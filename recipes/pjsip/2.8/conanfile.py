@@ -4,7 +4,7 @@ import glob
 import shutil
 from conans import ConanFile, AutoToolsBuildEnvironment, tools
 
-_openSSL = "OpenSSL"
+_openSSL = "openssl"
 
 # based on https://github.com/conan-community/conan-ncurses/blob/stable/6.1/conanfile.py
 class PjsipConan(ConanFile):
