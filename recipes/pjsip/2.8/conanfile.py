@@ -36,6 +36,8 @@ class PjsipConan(ConanFile):
         if self.settings.os == "Windows":
             del self.options.fPIC
             del self.options.shared
+            del self.default_options["fPIC"]
+            del self.default_options["shared"]
 
     def configure(self):
         del self.settings.compiler.libcxx
@@ -56,7 +58,7 @@ class PjsipConan(ConanFile):
         if self.settings.os == "Linux":
             self.requires("libalsa/1.1.0")
         if self.options.SSL:
-            self.requires(_openSSL+"/1.0.2u")
+            self.requires(_openSSL+"/1.0.2r")
 
     def _configure_autotools(self):
         if not self._autotools:
