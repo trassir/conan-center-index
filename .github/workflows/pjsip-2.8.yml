@@ -47,7 +47,8 @@ jobs:
           python-version: '3.x'
       - name: GitHub Action for Homebrew
         uses: artemnovichkov/action-homebrew@0.1.0
-        args: install pkg-config
+        with:
+          args: install pkg-config
       - name: Build and Optionally Upload
         uses: trassir/run-cpt@v0.2.2-trassir
         with:
