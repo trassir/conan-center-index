@@ -13,7 +13,7 @@ class AxtlsConan(ConanFile):
     settings = "os", "compiler", "build_type", "arch"
     options = {}
     default_options = ""
-    export_sources = [
+    exports_sources = [
         "osx10_compat.patch",
         "SNI.patch",
     ]
