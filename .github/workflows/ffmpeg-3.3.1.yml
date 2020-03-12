@@ -23,7 +23,7 @@ jobs:
   ffmpeg_1_2_11:
     strategy:
       matrix:
-        build: ['linux-gcc4.8', 'linux-gcc7', 'linux-gcc9', 'windows-2019-release', 'windows-2019-debug', 'macos']
+        build: ['macos']
         include:
           - build: 'linux-gcc4.8'
             os: 'ubuntu-latest'
