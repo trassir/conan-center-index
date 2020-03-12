@@ -1,29 +1,31 @@
-name: libalsa CI
+name: axtls-1.5.3 CI
 
 on:
   pull_request:
     paths:
-      - 'recipes/libalsa/all/**'
+      - 'recipes/axtls/1.5.3/**'
       - 'build.py'
-      - '.github/workflows/libalsa.yml'
+      - '.github/workflows/axtls-1.5.3.yml'
   push:
     branches:
       - trassir-ci
     paths:
-      - 'recipes/libalsa/all/**'
+      - 'recipes/axtls/1.5.3/**'
       - 'build.py'
-      - '.github/workflows/libalsa.yml'
+      - '.github/workflows/axtls-1.5.3.yml'
 
 env:
   CONAN_PASSWORD: ${{ secrets.BintrayApiKey }}
+  CONAN_REFERENCE: 'axtls/1.5.3'
   IS_PURE_C: true
 
 jobs:
-  libalsa:
+  axtls:
     strategy:
       matrix:
-        build: ['linux-gcc4.8', 'linux-gcc7', 'linux-gcc9', 'windows-2019-release', 'windows-2019-debug', 'macos']
-        libalsa_versions: ['1.1.0', '1.1.9']
+        # uncomment when conanfile.py ready
+        # build: ['linux-gcc4.8', 'linux-gcc7', 'linux-gcc9', 'windows-2019-release', 'windows-2019-debug', 'macos']
+        build: ['macos']
         include:
           - build: 'linux-gcc4.8'
             os: 'ubuntu-latest'
@@ -86,13 +88,12 @@ jobs:
           install: custom
           # TODO: replace when https://github.com/conan-io/conan-package-tools/issues/479 will be fixed upstream
           custom-package: git+https://github.com/trassir/conan-package-tools@fix-479-trassir
-          work-dir: sources/recipes/libalsa/all
+          work-dir: sources/recipes/axtls/1.5.3
           build-script: ../../../build.py
           compiler: ${{ matrix.compiler }}
           compiler-versions: ${{ matrix.compiler_version }}
           docker-images: ${{ matrix.docker_image }}
         env:
-          CONAN_REFERENCE: 'libalsa/${{ matrix.libalsa_versions }}'
           CONAN_VISUAL_RUNTIMES: ${{ matrix.vs_runtimes }}
           CONAN_ARCHS: ${{ matrix.archs }}
           CONAN_BUILD_TYPES: ${{ matrix.build_types }}
