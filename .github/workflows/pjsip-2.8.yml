@@ -34,7 +34,9 @@ jobs:
             xcode_version: '11.3.1'
     runs-on: ${{ matrix.os }}
     steps:
-      - run: brew install pkg-config
+      - name: Install pkg-config
+        if: ${{ matrix.os }} == "macos"
+        run: brew install pkg-config
       - name: Configure git
         run: git config --global core.autocrlf input
         shell: bash
