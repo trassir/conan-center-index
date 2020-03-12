@@ -66,7 +66,7 @@ class PjsipConan(ConanFile):
             # Getting build errors when cross-compiling webrtc on ARM
             # since we don't use it, just disable it for now
             args = [] # "--disable-libwebrtc"
-            if self.options.shared:
+            if self.settings.os != "Windows" and self.options.shared:
                 args.append("--enable-shared")
             if self.options.SSL:
                 openSSLroot = self.deps_cpp_info[_openSSL].rootpath
