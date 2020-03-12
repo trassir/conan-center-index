@@ -35,7 +35,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: Install pkg-config
-        if: ${{ matrix.os }} == "macos"
+        if: matrix.os == 'macos-latest'
         run: brew install pkg-config
       - name: Configure git
         run: git config --global core.autocrlf input
