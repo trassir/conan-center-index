@@ -23,7 +23,7 @@ jobs:
   pjsip:
     strategy:
       matrix:
-        build: ['linux-gcc4.8', 'linux-gcc7', 'linux-gcc9', 'windows-2019-release', 'windows-2019-debug', 'macos']
+        build: ['linux-gcc4.8', 'linux-gcc7', 'linux-gcc9', 'macos']
         include:
           - build: 'linux-gcc4.8'
             os: 'ubuntu-latest'
