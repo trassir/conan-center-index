@@ -13,7 +13,7 @@ class AxtlsConan(ConanFile):
     settings = "os", "compiler", "build_type", "arch"
     options = {}
     default_options = ""
-    exports_sources = [
+    export_sources = [
         "osx10_compat.patch",
         "SNI.patch",
     ]
@@ -52,8 +52,8 @@ class AxtlsConan(ConanFile):
         tools.get(**self.conan_data["sources"][self.version])
 
         # check recipe conistency
-        tools.check_with_algorithm_sum("sha1", "osx10_compat.patch", "599dec42a91ea42d2ef3ee5a1f993748a6dc25d0")
-        tools.check_with_algorithm_sum("sha1", "SNI.patch",          "fced4d6e8d85c35bfd72a44744d6bb87d29768d6")
+        tools.check_with_algorithm_sum("sha1", "osx10_compat.patch", "e211d33b1198e932ac251a811b783583ce1ec278")
+        tools.check_with_algorithm_sum("sha1", "SNI.patch",          "13ec4af9bab09839a4cd6fc0d7c935749cba04f9")
 
         # apply patches
         tools.patch(base_path = self._source_subfolder, patch_file = "SNI.patch", strip = 1)
