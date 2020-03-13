@@ -8,7 +8,7 @@ on:
       - '.github/workflows/xz_utils.yml'
   push:
     branches:
-      - trassir-ci
+      - master
     paths:
       - 'recipes/xz_utils/**'
       - 'build.py'
