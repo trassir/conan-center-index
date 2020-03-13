@@ -1,4 +1,4 @@
-name: protobuf CI
+name: protobuf-3.9.x CI
 
 on:
   pull_request:
