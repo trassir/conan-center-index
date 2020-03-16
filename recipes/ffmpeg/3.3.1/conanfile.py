@@ -125,7 +125,6 @@ class FFMpegConan(ConanFile):
             self.options.remove("qsv")
 
     def build_requirements(self):
-        disable to discover more deps
         self.build_requires("yasm_installer/1.3.0@bincrafters/stable")
         if self.settings.os == 'Windows':
             self.build_requires("msys2_installer/latest@bincrafters/stable")
@@ -135,7 +134,6 @@ class FFMpegConan(ConanFile):
             self.requires.add("zlib/1.2.11")
         if self.options.bzlib:
             self.requires.add("bzip2/1.0.6")
-        disable to discover more deps
         if self.options.lzma:
             self.requires.add("lzma/5.2.3")
         if self.options.iconv:
