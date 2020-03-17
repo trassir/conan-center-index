@@ -198,15 +198,12 @@ class FFMpegConan(ConanFile):
                 for package in packages:
                     installer.install(package)
 
-    def _copy_pkg_config(self, name):
-        root = self.deps_cpp_info[name].rootpath
-        pc_files = glob.glob('../%s.pc' % name)
+    def _copy_pkg_configs(self):
+        pc_files = glob.glob(self.build_folder + '/*.pc')
         for pc_name in pc_files:
             new_pc = os.path.join('pkgconfig', os.path.basename(pc_name))
             self.output.warn('copy .pc file %s' % os.path.basename(pc_name))
             shutil.copy(pc_name, new_pc)
-            prefix = tools.unix_path(root) if self.settings.os == 'Windows' else root
-            tools.replace_prefix_in_pc_file(new_pc, prefix)
 
     def _patch_sources(self):
         if self._is_msvc and self.options.x264 and not self.options['x264'].shared:
@@ -317,32 +314,7 @@ class FFMpegConan(ConanFile):
             args.extend(['--disable-cuda', '--disable-cuvid'])
 
             os.makedirs('pkgconfig')
-            if self.options.freetype:
-                self._copy_pkg_config('freetype')
-                self._copy_pkg_config('libpng')
-            if self.options.opus:
-                self._copy_pkg_config('opus')
-            if self.options.vorbis:
-                self._copy_pkg_config('ogg')
-                self._copy_pkg_config('vorbis')
-            if self.options.zmq:
-                self._copy_pkg_config('zmq')
-            if self.options.sdl2:
-                self._copy_pkg_config('sdl2')
-            if self.options.x264:
-                self._copy_pkg_config('libx264')
-            if self.options.x265:
-                self._copy_pkg_config('libx265')
-            if self.options.vpx:
-                self._copy_pkg_config('libvpx')
-            if self.options.fdk_aac:
-                self._copy_pkg_config('libfdk_aac')
-            if self.options.openh264:
-                self._copy_pkg_config('openh264')
-            if self.options.openjpeg:
-                self._copy_pkg_config('openjpeg')
-            if self.options.webp:
-                self._copy_pkg_config('libwebp')
+            self._copy_pkg_configs()
 
             pkg_config_path = os.path.abspath('pkgconfig')
             pkg_config_path = tools.unix_path(pkg_config_path) if self.settings.os == 'Windows' else pkg_config_path

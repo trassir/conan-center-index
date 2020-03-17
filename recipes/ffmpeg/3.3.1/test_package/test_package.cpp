@@ -141,12 +141,6 @@ int main() try
 #ifdef WITH_FREETYPE
     check_filter("drawtext");
 #endif
-#ifdef WITH_VAAPI
-    check_hwaccel("vaapi");
-#endif
-#ifdef WITH_VDPAU
-    check_hwaccel("vdpau");
-#endif
 #ifdef WITH_VORBIS
     check_decoder("libvorbis");
     check_encoder("libvorbis");
@@ -162,9 +156,6 @@ int main() try
 #endif
 #ifdef WITH_AUDIOTOOLBOX
     check_decoder("aac_at");
-#endif
-#ifdef WITH_VIDEOTOOLBOX
-    check_hwaccel("videotoolbox");
 #endif
 #ifdef WITH_SECURETRANSPORT
     check_protocol("tls");
@@ -210,7 +201,6 @@ int main() try
     check_encoder("libfdk_aac");
 #endif
 #ifdef WITH_QSV
-    check_hwaccel("qsv");
     check_decoder("mpeg2_qsv");
     check_decoder("h264_qsv");
     check_decoder("hevc_qsv");
