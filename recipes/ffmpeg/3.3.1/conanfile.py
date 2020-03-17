@@ -198,13 +198,6 @@ class FFMpegConan(ConanFile):
                 for package in packages:
                     installer.install(package)
 
-    def _copy_pkg_configs(self):
-        pc_files = glob.glob(self.build_folder + '/*.pc')
-        for pc_name in pc_files:
-            new_pc = os.path.join(self._source_subfolder, 'pkgconfig', os.path.basename(pc_name))
-            self.output.info('copy .pc file %s to %s' % (os.path.basename(pc_name), new_pc))
-            shutil.copy(pc_name, new_pc)
-
     def _patch_sources(self):
         if self._is_msvc and self.options.x264 and not self.options['x264'].shared:
             # suppress MSVC linker warnings: https://trac.ffmpeg.org/ticket/7396
@@ -313,10 +306,7 @@ class FFMpegConan(ConanFile):
             # FIXME disable CUDA and CUVID by default, revisit later
             args.extend(['--disable-cuda', '--disable-cuvid'])
 
-            os.makedirs(os.path.join(self._source_subfolder, 'pkgconfig'))
-            self._copy_pkg_configs()
-
-            pkg_config_path = os.path.abspath(os.path.join(self._source_subfolder, 'pkgconfig'))
+            pkg_config_path = os.path.abspath(self.build_folder)
             pkg_config_path = tools.unix_path(pkg_config_path) if self.settings.os == 'Windows' else pkg_config_path
 
             try:
@@ -331,6 +321,7 @@ class FFMpegConan(ConanFile):
                 env_build = AutoToolsBuildEnvironment(self, win_bash=self._is_mingw_windows or self._is_msvc)
                 # ffmpeg's configure is not actually from autotools, so it doesn't understand standard options like
                 # --host, --build, --target
+                self.output.info("PKG_CONFIG_PATH=%s" % pkg_config_path)
                 self.output.info("CONFIGURE=%s" % args)
                 env_build.configure(args=args, build=False, host=False, target=False,
                                     pkg_config_paths=[pkg_config_path])
