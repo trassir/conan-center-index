@@ -1,29 +1,29 @@
-name: openssl CI
+name: yasm CI
 
 on:
   pull_request:
     paths:
-      - 'recipes/openssl/**'
+      - 'recipes/yasm/all/**'
       - 'build.py'
-      - '.github/workflows/openssl.yml'
+      - '.github/workflows/yasm.yml'
   push:
     branches:
       - master
     paths:
-      - 'recipes/openssl/**'
+      - 'recipes/yasm/all/**'
       - 'build.py'
-      - '.github/workflows/openssl.yml'
+      - '.github/workflows/yasm.yml'
 
 env:
   CONAN_PASSWORD: ${{ secrets.BintrayApiKey }}
   IS_PURE_C: true
 
 jobs:
-  openssl:
+  yasm:
     strategy:
       matrix:
         build: ['linux-gcc4.8', 'linux-gcc7', 'linux-gcc9', 'windows-2019-release', 'windows-2019-debug', 'macos']
-        openssl_versions: ['1.0.2r', '1.1.0l', '1.1.1c', '1.1.1d']
+        yasm_versions: ['1.3.0']
         include:
           - build: 'linux-gcc4.8'
             os: 'ubuntu-latest'
@@ -86,14 +86,14 @@ jobs:
           install: custom
           # TODO: replace when https://github.com/conan-io/conan-package-tools/issues/479 will be fixed upstream
           custom-package: git+https://github.com/trassir/conan-package-tools@fix-479-trassir
-          work-dir: sources/recipes/openssl/ALL
+          work-dir: sources/recipes/yasm/all
           build-script: ../../../build.py
           compiler: ${{ matrix.compiler }}
           compiler-versions: ${{ matrix.compiler_version }}
           docker-images: ${{ matrix.docker_image }}
         env:
+          CONAN_REFERENCE: 'yasm/${{ matrix.yasm_versions }}'
           CONAN_VISUAL_RUNTIMES: ${{ matrix.vs_runtimes }}
           CONAN_ARCHS: ${{ matrix.archs }}
           CONAN_BUILD_TYPES: ${{ matrix.build_types }}
-          CONAN_REFERENCE: openssl/${{ matrix.openssl_versions }}
           DEVELOPER_DIR: /Applications/Xcode_${{ matrix.xcode_version }}.app/Contents/Developer
