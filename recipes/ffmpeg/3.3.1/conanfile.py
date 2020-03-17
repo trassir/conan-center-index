@@ -202,7 +202,7 @@ class FFMpegConan(ConanFile):
         pc_files = glob.glob(self.build_folder + '/*.pc')
         for pc_name in pc_files:
             new_pc = os.path.join(self._source_subfolder, 'pkgconfig', os.path.basename(pc_name))
-            self.output.warn('copy .pc file %s to %s' % (os.path.basename(pc_name), new_pc))
+            self.output.info('copy .pc file %s to %s' % (os.path.basename(pc_name), new_pc))
             shutil.copy(pc_name, new_pc)
 
     def _patch_sources(self):
@@ -331,7 +331,7 @@ class FFMpegConan(ConanFile):
                 env_build = AutoToolsBuildEnvironment(self, win_bash=self._is_mingw_windows or self._is_msvc)
                 # ffmpeg's configure is not actually from autotools, so it doesn't understand standard options like
                 # --host, --build, --target
-                print("CONFIGURE=%s" % args)
+                self.output.info("CONFIGURE=%s" % args)
                 env_build.configure(args=args, build=False, host=False, target=False,
                                     pkg_config_paths=[pkg_config_path])
                 env_build.make()
