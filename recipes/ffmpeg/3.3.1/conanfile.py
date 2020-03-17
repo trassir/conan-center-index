@@ -318,7 +318,6 @@ class FFMpegConan(ConanFile):
                                   % (pkg_config_path, filename)
                         tools.run_in_windows_bash(self, command)
 
-                vars = {'PKG_CONFIG_PATH': pkg_config_path}
                 with tools.environment_append(vars):
                     env_build = AutoToolsBuildEnvironment(self, win_bash=self._is_mingw_windows or self._is_msvc)
                     # ffmpeg's configure is not actually from autotools, so it doesn't understand standard options like
@@ -326,7 +325,9 @@ class FFMpegConan(ConanFile):
                     self.output.info("PKG_CONFIG_PATH=%s" % pkg_config_path)
                     self.output.info("VARS=%s" % env_build.vars)
                     self.output.info("CONFIGURE=%s" % args)
-                    env_build.configure(args=args, build=False, host=False, target=False)
+                    env_build_vars = env_build.vars
+                    env_build_vars['PKG_CONFIG_PATH'] = pkg_config_path
+                    env_build.configure(args=args, build=False, host=False, target=False, vars=env_build_vars)
                     env_build.make()
                     env_build.make(args=['install'])
             finally:
