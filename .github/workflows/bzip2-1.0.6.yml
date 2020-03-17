@@ -1,4 +1,4 @@
-name: bzip2 CI
+name: bzip2-1.0.6 CI
 
 on:
   pull_request:
