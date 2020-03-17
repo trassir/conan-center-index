@@ -199,14 +199,10 @@ class FFMpegConan(ConanFile):
                     installer.install(package)
 
     def _copy_pkg_configs(self):
-        self.output.warn('curdir=%s' % os.path.abspath(os.curdir))
-        self.output.warn('listdir_c=%s' % os.listdir(os.path.abspath(os.curdir)))
-        self.output.warn('listdir_b=%s' % os.listdir(os.path.abspath(self.build_folder)))
         pc_files = glob.glob(self.build_folder + '/*.pc')
-        self.output.warn('pcfiles=%s' % pc_files)
         for pc_name in pc_files:
-            new_pc = os.path.join('pkgconfig', os.path.basename(pc_name))
-            self.output.warn('copy .pc file %s' % os.path.basename(pc_name))
+            new_pc = os.path.join(self._source_subfolder, 'pkgconfig', os.path.basename(pc_name))
+            self.output.warn('copy .pc file %s to %s' % os.path.basename(pc_name, new_pc))
             shutil.copy(pc_name, new_pc)
 
     def _patch_sources(self):
@@ -317,10 +313,10 @@ class FFMpegConan(ConanFile):
             # FIXME disable CUDA and CUVID by default, revisit later
             args.extend(['--disable-cuda', '--disable-cuvid'])
 
-            os.makedirs('pkgconfig')
+            os.makedirs(os.path.join(self._source_subfolder, 'pkgconfig'))
             self._copy_pkg_configs()
 
-            pkg_config_path = os.path.abspath('pkgconfig')
+            pkg_config_path = os.path.abspath(os.path.join(self._source_subfolder, 'pkgconfig'))
             pkg_config_path = tools.unix_path(pkg_config_path) if self.settings.os == 'Windows' else pkg_config_path
 
             try:
