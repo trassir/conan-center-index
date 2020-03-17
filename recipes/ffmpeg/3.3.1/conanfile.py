@@ -321,6 +321,7 @@ class FFMpegConan(ConanFile):
                 env_build = AutoToolsBuildEnvironment(self, win_bash=self._is_mingw_windows or self._is_msvc)
                 # ffmpeg's configure is not actually from autotools, so it doesn't understand standard options like
                 # --host, --build, --target
+                env_build.vars['PKG_CONFIG_PATH'] = pkg_config_path
                 self.output.info("PKG_CONFIG_PATH=%s" % pkg_config_path)
                 self.output.info("VARS=%s" % env_build.vars)
                 self.output.info("CONFIGURE=%s" % args)
