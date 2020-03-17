@@ -202,7 +202,7 @@ class FFMpegConan(ConanFile):
         pc_files = glob.glob(self.build_folder + '/*.pc')
         for pc_name in pc_files:
             new_pc = os.path.join(self._source_subfolder, 'pkgconfig', os.path.basename(pc_name))
-            self.output.warn('copy .pc file %s to %s' % os.path.basename(pc_name, new_pc))
+            self.output.warn('copy .pc file %s to %s' % (os.path.basename(pc_name), new_pc))
             shutil.copy(pc_name, new_pc)
 
     def _patch_sources(self):
