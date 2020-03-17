@@ -323,8 +323,7 @@ class FFMpegConan(ConanFile):
                 # --host, --build, --target
                 self.output.info("PKG_CONFIG_PATH=%s" % pkg_config_path)
                 self.output.info("CONFIGURE=%s" % args)
-                env_build.configure(args=args, build=False, host=False, target=False,
-                                    pkg_config_paths=[pkg_config_path])
+                env_build.configure(args=args, build=False, host=False, target=False)
                 env_build.make()
                 env_build.make(args=['install'])
             finally:
