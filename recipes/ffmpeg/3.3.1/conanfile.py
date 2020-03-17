@@ -86,6 +86,7 @@ class FFMpegConan(ConanFile):
                        'videotoolbox': True,
                        'securetransport': True,  # conflicts with OpenSSL
                        'qsv': True}
+    generators = "pkg_config"
     _source_subfolder = "source_subfolder"
 
     @property
@@ -199,8 +200,7 @@ class FFMpegConan(ConanFile):
 
     def _copy_pkg_config(self, name):
         root = self.deps_cpp_info[name].rootpath
-        pc_dir = os.path.join(root, 'lib', 'pkgconfig')
-        pc_files = glob.glob('%s/*.pc' % pc_dir)
+        pc_files = glob.glob('../%s.pc' % name)
         for pc_name in pc_files:
             new_pc = os.path.join('pkgconfig', os.path.basename(pc_name))
             self.output.warn('copy .pc file %s' % os.path.basename(pc_name))

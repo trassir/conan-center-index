@@ -49,17 +49,6 @@ static void check_filter(const char * name)
     std::cout << "OK!" << std::endl;
 }
 
-static void check_hwaccel(const char * name)
-{
-    std::cout << "checking for hwaccel " << name << " ... ";
-    AVHWDeviceType type = av_hwdevice_find_type_by_name(name);
-    if (type == AV_HWDEVICE_TYPE_NONE)
-        throw_exception("hwaccel wasn't found", name);
-    if (!av_hwdevice_ctx_alloc(type))
-        throw_exception("hwaccel wasn't found", name);
-    std::cout << "OK!" << std::endl;
-}
-
 static void check_input_device(const char * name)
 {
     std::cout << "checking for input device " << name << " ... ";
