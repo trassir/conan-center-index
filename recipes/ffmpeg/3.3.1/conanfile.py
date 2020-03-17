@@ -322,6 +322,7 @@ class FFMpegConan(ConanFile):
                 # ffmpeg's configure is not actually from autotools, so it doesn't understand standard options like
                 # --host, --build, --target
                 self.output.info("PKG_CONFIG_PATH=%s" % pkg_config_path)
+                self.output.info("VARS=%s" % env_build.vars)
                 self.output.info("CONFIGURE=%s" % args)
                 env_build.configure(args=args, build=False, host=False, target=False)
                 env_build.make()
