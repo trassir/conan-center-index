@@ -199,7 +199,11 @@ class FFMpegConan(ConanFile):
                     installer.install(package)
 
     def _copy_pkg_configs(self):
+        self.output.warn('curdir=%s' % os.path.abspath(os.curdir))
+        self.output.warn('listdir_c=%s' % os.listdir(os.path.abspath(os.curdir)))
+        self.output.warn('listdir_b=%s' % os.listdir(os.path.abspath(self.build_folder)))
         pc_files = glob.glob(self.build_folder + '/*.pc')
+        self.output.warn('pcfiles=%s' % pc_files)
         for pc_name in pc_files:
             new_pc = os.path.join('pkgconfig', os.path.basename(pc_name))
             self.output.warn('copy .pc file %s' % os.path.basename(pc_name))
