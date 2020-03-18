@@ -329,7 +329,7 @@ class FFMpegConan(ConanFile):
                 self.output.info("CONFIGURE_VARS=%s" % env_build_vars)
                 vars = {'PKG_CONFIG_PATH': pkg_config_path}
                 with tools.environment_append(vars):
-                    self.run('pkgconfig --libs openh264')
+                    self.run('pkg-config --libs openh264')
                     self.run('ls -la %s' % pkg_config_path)
                     env_build.configure(args=args, build=False, host=False, target=False,
                         vars=env_build_vars, pkg_config_paths=[pkg_config_path,])
