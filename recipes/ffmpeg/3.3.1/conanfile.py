@@ -306,6 +306,8 @@ class FFMpegConan(ConanFile):
             # FIXME disable CUDA and CUVID by default, revisit later
             args.extend(['--disable-cuda', '--disable-cuvid'])
 
+            # thanks to generators = "pkg_config", we will have all dependency
+            # *.pc files in build folder, so pointing pkg-config there is enough
             pkg_config_path = os.path.abspath(self.build_folder)
             pkg_config_path = tools.unix_path(pkg_config_path) if self.settings.os == 'Windows' else pkg_config_path
 
@@ -321,18 +323,8 @@ class FFMpegConan(ConanFile):
                 env_build = AutoToolsBuildEnvironment(self, win_bash=self._is_mingw_windows or self._is_msvc)
                 # ffmpeg's configure is not actually from autotools, so it doesn't understand standard options like
                 # --host, --build, --target
-                self.output.info("PKG_CONFIG_PATH=%s" % pkg_config_path)
-                self.output.info("VARS=%s" % env_build.vars)
-                self.output.info("CONFIGURE=%s" % args)
-                env_build_vars = env_build.vars
-                env_build_vars['PKG_CONFIG_PATH'] = pkg_config_path
-                self.output.info("CONFIGURE_VARS=%s" % env_build_vars)
-                vars = {'PKG_CONFIG_PATH': pkg_config_path}
-                with tools.environment_append(vars):
-                    self.run('pkg-config --libs openh264')
-                    self.run('ls -la %s' % pkg_config_path)
-                    env_build.configure(args=args, build=False, host=False, target=False,
-                        vars=env_build_vars, pkg_config_paths=[pkg_config_path,])
+                env_build.configure(args=args, build=False, host=False, target=False,
+                    pkg_config_paths=[pkg_config_path])
                 env_build.make()
                 env_build.make(args=['install'])
             finally:
