@@ -8,7 +8,7 @@ on:
       - '.github/workflows/ffmpeg-3.3.1.yml'
   push:
     branches:
-      - trassir-ci
+      - master
     paths:
       - 'recipes/ffmpeg/3.3.1/**'
       - 'build.py'
@@ -95,7 +95,6 @@ jobs:
           compiler-versions: ${{ matrix.compiler_version }}
           docker-images: ${{ matrix.docker_image }}
         env:
-          CONAN_OPTIONS: "ffmpeg:shared=True"
           CONAN_VISUAL_RUNTIMES: ${{ matrix.vs_runtimes }}
           CONAN_ARCHS: ${{ matrix.archs }}
           CONAN_BUILD_TYPES: ${{ matrix.build_types }}
