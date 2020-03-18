@@ -22,7 +22,7 @@ jobs:
   c-ares:
     strategy:
       matrix:
-        build: ['linux-gcc4.8', 'linux-gcc7']
+        build: ['linux-gcc4.8', 'linux-gcc7', 'linux-gcc9']
         c-ares_versions: ['1.14.0', '1.15.0']
         include:
           - build: 'linux-gcc4.8'
@@ -37,6 +37,13 @@ jobs:
             compiler: 'gcc'
             compiler_version: '7'
             docker_image: 'conanio/gcc7'
+            build_types: 'Release,Debug'
+            archs: 'x86,x86_64'
+          - build: 'linux-gcc9'
+            os: 'ubuntu-latest'
+            compiler: 'gcc'
+            compiler_version: '9'
+            docker_image: 'conanio/gcc9'
             build_types: 'Release,Debug'
             archs: 'x86,x86_64'
     runs-on: ${{ matrix.os }}
