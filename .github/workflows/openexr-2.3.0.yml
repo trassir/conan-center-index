@@ -1,21 +1,22 @@
-name: openexr CI
+name: openexr-2.3.0 CI
 
 on:
   pull_request:
     paths:
-      - 'recipes/openexr/all/**'
+      - 'recipes/openexr/2.3.0/**'
       - 'build.py'
-      - '.github/workflows/openexr.yml'
+      - '.github/workflows/openexr-2.3.0.yml'
   push:
     branches:
       - master
     paths:
-      - 'recipes/openexr/all/**'
+      - 'recipes/openexr/2.3.0/**'
       - 'build.py'
-      - '.github/workflows/openexr.yml'
+      - '.github/workflows/openexr-2.3.0.yml'
 
 env:
   CONAN_PASSWORD: ${{ secrets.BintrayApiKey }}
+  CONAN_REFERENCE: 'openexr/2.3.0'
   IS_PURE_C: true
 
 jobs:
@@ -23,7 +24,6 @@ jobs:
     strategy:
       matrix:
         build: ['linux-gcc4.8', 'linux-gcc7', 'linux-gcc9', 'windows-2019-release', 'windows-2019-debug', 'macos']
-        openexr_versions: ['2.3.0']
         include:
           - build: 'linux-gcc4.8'
             os: 'ubuntu-latest'
@@ -86,13 +86,12 @@ jobs:
           install: custom
           # TODO: replace when https://github.com/conan-io/conan-package-tools/issues/479 will be fixed upstream
           custom-package: git+https://github.com/trassir/conan-package-tools@fix-479-trassir
-          work-dir: sources/recipes/openexr/all
+          work-dir: sources/recipes/openexr/2.3.0
           build-script: ../../../build.py
           compiler: ${{ matrix.compiler }}
           compiler-versions: ${{ matrix.compiler_version }}
           docker-images: ${{ matrix.docker_image }}
         env:
-          CONAN_REFERENCE: 'openexr/${{ matrix.openexr_versions }}'
           CONAN_VISUAL_RUNTIMES: ${{ matrix.vs_runtimes }}
           CONAN_ARCHS: ${{ matrix.archs }}
           CONAN_BUILD_TYPES: ${{ matrix.build_types }}
