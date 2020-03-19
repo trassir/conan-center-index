@@ -69,6 +69,9 @@ jobs:
             xcode_version: '11.3.1'
     runs-on: ${{ matrix.os }}
     steps:
+      - name: Install automake
+        if: matrix.os == 'macos-latest'
+        run: brew install automake
       - name: Configure git
         run: git config --global core.autocrlf false
         shell: bash
