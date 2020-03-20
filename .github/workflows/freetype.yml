@@ -19,7 +19,7 @@ env:
   IS_PURE_C: true
 
 jobs:
-  openssl:
+  freetype:
     strategy:
       matrix:
         build: ['linux-gcc4.8', 'linux-gcc7', 'linux-gcc9', 'windows-2019-release', 'windows-2019-debug', 'macos']
