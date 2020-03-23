@@ -19,7 +19,7 @@ class MesaGluConan(ConanFile):
     _autotools = None
 
     requires = (
-        "mesa/19.3.1@bincrafters/stable"
+        "mesa/19.3.1"
     )
 
     def config_options(self):
