@@ -3,14 +3,14 @@ name: freetype CI
 on:
   pull_request:
     paths:
-      - 'recipes/freetype/**'
+      - 'recipes/freetype/all/**'
       - 'build.py'
       - '.github/workflows/freetype.yml'
   push:
     branches:
       - master
     paths:
-      - 'recipes/freetype/**'
+      - 'recipes/freetype/all/**'
       - 'build.py'
       - '.github/workflows/freetype.yml'
 
