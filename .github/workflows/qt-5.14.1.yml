@@ -57,6 +57,19 @@ jobs:
           compiler-versions: ${{ matrix.compiler_version }}
           docker-images: ${{ matrix.docker_image }}
         env:
+          CONAN_OPTIONS: 'qt:openssl=False,
+                          qt:qtsvg=True,
+                          qt:qtx11extras=True,
+                          qt:qtimageformats=True,
+                          qt:qtscript=True,
+
+                          qt:with_glib=False,
+                          qt:with_icu=False,
+                          qt:with_harfbuzz=False,
+                          qt:with_pcre2=False,
+                          qt:with_mysql=False,
+                          qt:with_sdl2=False,
+                          qt:with_zstd=False'
           CONAN_VISUAL_RUNTIMES: ${{ matrix.vs_runtimes }}
           CONAN_ARCHS: ${{ matrix.archs }}
           CONAN_BUILD_TYPES: ${{ matrix.build_types }}

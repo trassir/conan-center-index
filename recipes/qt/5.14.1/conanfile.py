@@ -144,15 +144,15 @@ class QtConan(ConanFile):
             self.build_requires("jom/1.1.3")
         if self.settings.os == 'Linux':
             if not tools.which('pkg-config'):
-                self.build_requires('pkg-config_installer/0.29.2@bincrafters/stable')
+                self.build_requires('pkg-config_installer/0.29.2')
         if self.options.qtwebengine:
             # gperf, bison, flex, python >= 2.7.5 & < 3
             if not tools.which("bison"):
-                self.build_requires("bison_installer/3.3.2@bincrafters/stable")
+                self.build_requires("bison_installer/3.3.2")
             if not tools.which("gperf"):
-                self.build_requires("gperf_installer/3.1@conan/stable")
+                self.build_requires("gperf_installer/3.1")
             if not tools.which("flex"):
-                self.build_requires("flex_installer/2.6.4@bincrafters/stable")
+                self.build_requires("flex_installer/2.6.4")
 
             def _check_python_version():
                 # Check if a valid python2 is available in PATH or it will failflex
@@ -287,7 +287,7 @@ class QtConan(ConanFile):
             self.requires("pcre2/10.33")
 
         if self.options.with_glib:
-            self.requires("glib/2.64.0@bincrafters/stable")
+            self.requires("glib/2.64.0")
         # if self.options.with_libiconv:
         #     self.requires("libiconv/1.16")
         if self.options.with_doubleconversion and not self.options.multiconfiguration:
@@ -295,11 +295,11 @@ class QtConan(ConanFile):
         if self.options.with_freetype and not self.options.multiconfiguration:
             self.requires("freetype/2.10.1")
         if self.options.with_fontconfig:
-            self.requires("fontconfig/2.13.91@conan/stable")
+            self.requires("fontconfig/2.13.91")
         if self.options.with_icu:
             self.requires("icu/64.2")
         if self.options.with_harfbuzz and not self.options.multiconfiguration:
-            self.requires("harfbuzz/2.6.4@bincrafters/stable")
+            self.requires("harfbuzz/2.6.4")
         if self.options.with_libjpeg and not self.options.multiconfiguration:
             self.requires("libjpeg/9d")
         if self.options.with_libpng and not self.options.multiconfiguration:
@@ -315,34 +315,34 @@ class QtConan(ConanFile):
             if self.settings.os != "Windows":
                 self.requires("odbc/2.3.7")
         if self.options.with_sdl2:
-            self.requires("sdl2/2.0.10@bincrafters/stable")
+            self.requires("sdl2/2.0.10")
         if self.options.with_openal:
             self.requires("openal/1.19.1")
         if self.options.with_libalsa:
             self.requires("libalsa/1.1.9")
         if self.options.GUI and self.settings.os == "Linux":
             for p in self._xcb_packages:
-                self.requires("%s/%s@bincrafters/stable" % (p, self._xcb_packages[p]))
+                self.requires("%s/%s" % (p, self._xcb_packages[p]))
             if not tools.cross_building(self.settings, skip_x64_x86=True):
-                self.requires("xkbcommon/0.10.0@bincrafters/stable")
+                self.requires("xkbcommon/0.10.0")
         if self.options.with_zstd:
             self.requires("zstd/1.4.4")
         if self.options.qtwebengine and self.settings.os == "Linux":
-            self.requires("libx11/1.6.8@bincrafters/stable")
-            self.requires("libdrm/2.4.100@bincrafters/stable")
-            self.requires("libxcomposite/0.4.5@bincrafters/stable")
-            self.requires("libxcursor/1.2.0@bincrafters/stable")
-            self.requires("libxi/1.7.10@bincrafters/stable")
-            self.requires("libxtst/1.2.3@bincrafters/stable")
-            self.requires("libxrandr/1.5.2@bincrafters/stable")
-            self.requires("libxscrnsaver/1.2.3@bincrafters/stable")
+            self.requires("libx11/1.6.8")
+            self.requires("libdrm/2.4.100")
+            self.requires("libxcomposite/0.4.5")
+            self.requires("libxcursor/1.2.0")
+            self.requires("libxi/1.7.10")
+            self.requires("libxtst/1.2.3")
+            self.requires("libxrandr/1.5.2")
+            self.requires("libxscrnsaver/1.2.3")
             self.requires("expat/2.2.9")
             #self.requires("ffmpeg/4.2@bincrafters/stable")
             self.requires("opus/1.3.1")
 
         if self.options.opengl in ["desktop", "es2"]:
             if self.settings.os == 'Linux' and self.options.with_mesa:
-                self.requires('mesa/19.3.1@bincrafters/stable')
+                self.requires('mesa/19.3.1')
 
     def system_requirements(self):
         pack_names = []
