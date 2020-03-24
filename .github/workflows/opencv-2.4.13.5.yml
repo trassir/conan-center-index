@@ -92,7 +92,12 @@ jobs:
           compiler-versions: ${{ matrix.compiler_version }}
           docker-images: ${{ matrix.docker_image }}
         env:
-          CONAN_OPTIONS: 'libtiff:lzma=False'
+          # these are taken for macOS config, linux one may be different!
+          CONAN_OPTIONS: '
+            opencv:jasper=False,
+            opencv:openexr=False,
+            opencv:tiff=False
+            '
           CONAN_VISUAL_RUNTIMES: ${{ matrix.vs_runtimes }}
           CONAN_ARCHS: ${{ matrix.archs }}
           CONAN_BUILD_TYPES: ${{ matrix.build_types }}
