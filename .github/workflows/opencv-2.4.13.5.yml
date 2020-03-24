@@ -17,7 +17,7 @@ on:
 env:
   CONAN_PASSWORD: ${{ secrets.BintrayApiKey }}
   CONAN_REFERENCE: 'opencv/2.4.13.5'
-  IS_PURE_C: true
+  IS_PURE_C: false
 
 jobs:
   opencv:
