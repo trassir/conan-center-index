@@ -4,7 +4,7 @@ import glob
 import shutil
 
 
-class xcbprotoConan(BaseHeaderOnly):
+class xcbprotoConan():
     homepage = "https://www.x.org/wiki/"
     license = "X11"
     url = "https://github.com/bincrafters/conan-x11"
