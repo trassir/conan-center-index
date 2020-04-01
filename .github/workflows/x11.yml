@@ -24,8 +24,8 @@ jobs:
     strategy:
       matrix:
         build: ['linux-gcc4.8', 'linux-gcc8', 'linux-gcc9']
-        xcb-proto_version: '1.13'
-        libxdmcp_version: '1.6.8'
+        xcb-proto_version: ['1.13']
+        libxdmcp_version: ['1.6.8']
         include:
           - build: 'linux-gcc4.8'
             os: 'ubuntu-latest'
