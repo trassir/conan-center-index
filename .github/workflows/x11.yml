@@ -64,6 +64,9 @@ jobs:
       - name: Generating conanfiles
         run:
           python3 /home/runner/work/conan-center-index/conan-center-index/sources/recipes/x11/all/manage.py gen
+      - name: ls
+        run:
+          ls -l /home/runner/work/conan-center-index/conan-center-index/sources/recipes/x11/all/xcb-proto
       - name: Building xcb-proto
         uses: trassir/run-cpt@v0.2.2-trassir
         with:
