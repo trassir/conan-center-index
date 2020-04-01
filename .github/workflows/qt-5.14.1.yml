@@ -24,7 +24,7 @@ jobs:
     strategy:
       matrix:
         build: ['macos']
-        include:          
+        include:
           - build: 'macos'
             os: 'macos-latest'
             build_types: 'Release,Debug'
@@ -33,6 +33,7 @@ jobs:
                             qt:qtsvg=True,
                             qt:qtimageformats=True,
                             qt:qtscript=True,
+                            qt:qttools=True,
 
                             qt:with_glib=False,
                             qt:with_icu=False,
