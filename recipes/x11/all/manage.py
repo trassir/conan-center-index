@@ -15,6 +15,7 @@ import os
 import sys
 print('curent dir: %s' % os.path.abspath(os.path.dirname(__file__)))
 print('parent dir: %s' % os.path.join(os.path.abspath(os.path.dirname(__file__)), '..'))
+print('cwd: %s' %  os.getcwd())
 sys.path.insert(0, os.path.join(os.path.abspath(os.path.dirname(__file__)), '..'))
 from conanfile_base import {baseclass}
 
