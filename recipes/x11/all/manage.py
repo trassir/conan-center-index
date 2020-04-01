@@ -100,7 +100,7 @@ def gen(args):
             f.write(content)
 
             with open(os.path.join(current_dir, "conanfile_base.py")) as conanfile_base_src:
-                with open(os.path.join(package_dir, "conanfile_base.py", "w+")) as conanfile_base_dst:
+                with open(os.path.join(package_dir, "conanfile_base.py"), "w+") as conanfile_base_dst:
                     conanfile_base_dst.write(conanfile_base_src.read())
 
             for patch in patches:
