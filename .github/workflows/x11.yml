@@ -63,7 +63,7 @@ jobs:
           python-version: '3.x'
       - name: Generating conanfiles
         run:
-          python3 sources/recipes/x11/manage.py gen
+          python3 /home/runner/work/conan-center-index/conan-center-index/sources/recipes/x11/manage.py gen
       - name: Building xcb-proto
         uses: trassir/run-cpt@v0.2.2-trassir
         with:
