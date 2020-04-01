@@ -5,14 +5,14 @@ on:
     paths:
       - 'recipes/x11/all/xcb-proto/1.13/**'
       - 'build.py'
-      - '.github/workflows/x11/xcb-proto-1.13.yml'
+      - '.github/workflows/x11-xcb-proto-1.13.yml'
   push:
     branches:
       - master
     paths:
       - 'recipes/x11/all/xcb-proto/1.13/**'
       - 'build.py'
-      - '.github/workflows/x11/xcb-proto-1.13.yml'
+      - '.github/workflows/x11-xcb-proto-1.13.yml'
 
 env:
   CONAN_PASSWORD: ${{ secrets.BintrayApiKey }}
