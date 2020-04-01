@@ -9,7 +9,7 @@ import subprocess
 import json
 import os
 import re
-from shutil import copy
+from shutil import copy2
 
 conanfile_template = """from conans import tools
 import os
@@ -99,14 +99,14 @@ def gen(args):
                                                 patches=patches)
             f.write(content)
 
-            copy(os.path.join(current_dir, "conanfile_base.py"), os.path.join(package_dir))
+            copy2(os.path.join(current_dir, "conanfile_base.py"), os.path.join(package_dir))
 
             for patch in patches:
                 patch_file = os.path.join(current_dir, "patches", patch)
                 if os.path.exists(patch_file):
                     patches_dir = os.path.join(current_dir, name, "patches")
                     os.makedirs(patches_dir)
-                    copy(patch_file, patches_dir)
+                    copy2(patch_file, patches_dir)
 
 
 def create(args):
