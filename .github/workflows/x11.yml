@@ -17,13 +17,14 @@ on:
 env:
   CONAN_PASSWORD: ${{ secrets.BintrayApiKey }}
   IS_PURE_C: true
+  CONAN_DOCKER_RUN_OPTIONS: "-v $HOME/conan_cache:/home/conan/.conan/data"
 
 jobs:
   x11:
     strategy:
       matrix:
         build: ['linux-gcc4.8', 'linux-gcc8', 'linux-gcc9']
-        xcb-proto_version: ['1.13']
+        xproto_version: ['7.0.31']
         libxdmcp_version: ['1.1.3']
         include:
           - build: 'linux-gcc4.8'
@@ -63,19 +64,22 @@ jobs:
       - name: Generating conanfiles
         run: python /home/runner/work/conan-center-index/conan-center-index/sources/recipes/x11/all/manage.py gen
         shell: bash
-      - name: Building xcb-proto
+      - name: Creating conan cache dir
+        run: mkdir $HOME/conan_cache && chmod 777 $HOME/conan_cache
+        shell: bash
+      - name: Building xproto
         uses: trassir/run-cpt@v0.2.2-trassir
         with:
           install: custom
           # TODO: replace when https://github.com/conan-io/conan-package-tools/issues/479 will be fixed upstream
           custom-package: git+https://github.com/trassir/conan-package-tools@fix-479-trassir
-          work-dir: sources/recipes/x11/all/xcb-proto
+          work-dir: sources/recipes/x11/all/xproto
           build-script: ../../../../build.py
           compiler: ${{ matrix.compiler }}
           compiler-versions: ${{ matrix.compiler_version }}
           docker-images: ${{ matrix.docker_image }}
         env:
-          CONAN_REFERENCE: 'xcb-proto/${{ matrix.xcb-proto_version }}'
+          CONAN_REFERENCE: 'xcb-proto/${{ matrix.xproto_version }}'
           CONAN_VISUAL_RUNTIMES: ${{ matrix.vs_runtimes }}
           CONAN_ARCHS: ${{ matrix.archs }}
           CONAN_BUILD_TYPES: ${{ matrix.build_types }}
