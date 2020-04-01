@@ -14,7 +14,7 @@ conanfile_template = """from conans import tools
 import os
 import sys
 sys.path.insert(0, os.path.join(os.path.abspath(os.path.dirname(__file__)), '..'))
-from ..conanfile_base import {baseclass}
+from conanfile_base import {baseclass}
 
 class {classname}Conan({baseclass}):
     basename = "{name}"
