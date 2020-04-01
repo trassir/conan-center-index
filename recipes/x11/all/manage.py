@@ -41,7 +41,8 @@ class {classname}Conan({baseclass}):
         {system_libs}
 """
 
-libraries = json.load(open("x11.json"))
+current_dir = os.path.abspath(os.path.dirname(__file__))
+libraries = json.load(open(os.path.join(current_dir, "x11.json")))
 
 
 def find(name):
@@ -54,8 +55,8 @@ def find(name):
 def gen(args):
     for info in libraries:
         name = info["name"]
-        os.makedirs(name.lower())
-        filename = os.path.join(name.lower(), "conanfile.py")
+        os.makedirs(os.path.join(current_dir, name.lower()))
+        filename = os.path.join(current_dir, name.lower(), "conanfile.py")
         print("generating %s..." % filename)
         classname = name.replace("-", "")
         with open(filename, "w") as f:
@@ -159,3 +160,4 @@ def main(args):
 
 if __name__ == '__main__':
     main(sys.argv[1:])
+
