@@ -62,11 +62,11 @@ jobs:
         with:
           python-version: '3.x'
       - name: Generating conanfiles
+        run: python /home/runner/work/conan-center-index/conan-center-index/sources/recipes/x11/all/manage.py gen
+        shell: bash
+      - name: chmod
         run:
-          python3 /home/runner/work/conan-center-index/conan-center-index/sources/recipes/x11/all/manage.py gen
-      - name: ls
-        run:
-          ls -l /home/runner/work/conan-center-index/conan-center-index/sources/recipes/x11/all/xcb-proto
+          chmod 777 $HOME/.conan/data
       - name: Building xcb-proto
         uses: trassir/run-cpt@v0.2.2-trassir
         with:
