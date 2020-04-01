@@ -9,11 +9,10 @@ import subprocess
 import json
 import os
 import re
+from shutil import copy
 
 conanfile_template = """from conans import tools
 import os
-import sys
-sys.path.insert(0, '..')
 from conanfile_base import {baseclass}
 
 class {classname}Conan({baseclass}):
@@ -22,7 +21,7 @@ class {classname}Conan({baseclass}):
     version = "{version}"
     tags = ("conan", "{name}")
     description = '{description}'
-    exports = ["../conanfile_base.py", "../patches/*.patch"]
+    exports = ["conanfile_base.py", "patches/*.patch"]
     _patches = {patches}
 
     {requires}
@@ -55,7 +54,8 @@ def find(name):
 def gen(args):
     for info in libraries:
         name = info["name"]
-        os.makedirs(os.path.join(current_dir, name.lower()))
+        package_dir = os.path.join(current_dir, name.lower())
+        os.makedirs(package_dir)
         filename = os.path.join(current_dir, name.lower(), "conanfile.py")
         print("generating %s..." % filename)
         classname = name.replace("-", "")
@@ -98,6 +98,15 @@ def gen(args):
                                                 classname=classname,
                                                 patches=patches)
             f.write(content)
+
+            copy(os.path.join(current_dir, "conanfile_base.py"), os.path.join(package_dir))
+
+            for patch in patches:
+                patch_file = os.path.join(current_dir, "patches", patch)
+                if os.path.exists(patch_file):
+                    patches_dir = os.path.join(current_dir, name, "patches")
+                    os.makedirs(patches_dir)
+                    copy(patch_file, patches_dir)
 
 
 def create(args):
