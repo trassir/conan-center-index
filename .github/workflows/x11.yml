@@ -17,7 +17,7 @@ on:
 env:
   CONAN_PASSWORD: ${{ secrets.BintrayApiKey }}
   IS_PURE_C: true
-  CONAN_DOCKER_RUN_OPTIONS: "-v $HOME/.conan/data:/home/conan/.conan/data"
+  CONAN_DOCKER_RUN_OPTIONS: "-v $HOME/conan_cache:/home/conan/.conan/data"
 
 jobs:
   x11:
@@ -64,9 +64,9 @@ jobs:
       - name: Generating conanfiles
         run: python /home/runner/work/conan-center-index/conan-center-index/sources/recipes/x11/all/manage.py gen
         shell: bash
-      - name: chmod
+      - name: Creating conan cache folder
         run:
-          chmod 777 $HOME/.conan/data
+          mkdir $HOME/conan_cache
       - name: Building xcb-proto
         uses: trassir/run-cpt@v0.2.2-trassir
         with:
