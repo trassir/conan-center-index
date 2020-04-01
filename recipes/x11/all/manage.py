@@ -13,10 +13,7 @@ import re
 conanfile_template = """from conans import tools
 import os
 import sys
-print('curent dir: %s' % os.path.dirname(os.path.realpath(__file__)))
-print('parent dir: %s' % os.path.join(os.path.abspath(os.path.dirname(__file__)), '..'))
-print('cwd: %s' %  os.getcwd())
-sys.path.insert(0, os.path.join(os.path.abspath(os.path.dirname(__file__)), '..'))
+sys.path.insert(0, '..')
 from conanfile_base import {baseclass}
 
 class {classname}Conan({baseclass}):
@@ -25,7 +22,7 @@ class {classname}Conan({baseclass}):
     version = "{version}"
     tags = ("conan", "{name}")
     description = '{description}'
-    exports = ["conanfile_base.py", "patches/*.patch"]
+    exports = ["../conanfile_base.py", "../patches/*.patch"]
     _patches = {patches}
 
     {requires}
