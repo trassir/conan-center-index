@@ -1,29 +1,31 @@
-name: xcb-proto-1.13 CI
+name: x11 CI
 
 on:
   pull_request:
     paths:
-      - 'recipes/xcb-proto/1.13/**'
+      - 'recipes/x11/all/**'
       - 'build.py'
-      - '.github/workflows/x11-xcb-proto-1.13.yml'
+      - '.github/workflows/x11.yml'
   push:
     branches:
       - master
     paths:
-      - 'recipes/xcb-proto/1.13/**'
+      - 'recipes/x11/all/**'
       - 'build.py'
-      - '.github/workflows/x11-xcb-proto-1.13.yml'
+      - '.github/workflows/x11.yml'
 
 env:
   CONAN_PASSWORD: ${{ secrets.BintrayApiKey }}
   IS_PURE_C: true
+  CONAN_DOCKER_RUN_OPTIONS: "-v $HOME/.conan/data:/home/conan/.conan/data"
 
 jobs:
-  xcb-proto:
+  x11:
     strategy:
       matrix:
         build: ['linux-gcc4.8', 'linux-gcc8', 'linux-gcc9']
-        xcb-proto_versions: ['1.13']
+        xcb-proto_version: '1.13'
+        libxdmcp_version: '1.6.8'
         include:
           - build: 'linux-gcc4.8'
             os: 'ubuntu-latest'
@@ -59,19 +61,39 @@ jobs:
         uses: actions/setup-python@v1
         with:
           python-version: '3.x'
-      - name: Build and Optionally Upload
+      - name: Generating conanfiles
+        run:
+          python3 sources/recipes/x11/manage.py gen
+      - name: Building xcb-proto
         uses: trassir/run-cpt@v0.2.2-trassir
         with:
           install: custom
           # TODO: replace when https://github.com/conan-io/conan-package-tools/issues/479 will be fixed upstream
           custom-package: git+https://github.com/trassir/conan-package-tools@fix-479-trassir
-          work-dir: sources/recipes/xcb-proto/${{ matrix.xcb-proto_versions }}
-          build-script: ../../../build.py
+          work-dir: sources/recipes/x11/xcb-proto${{ matrix.xcb-proto_versions }}
+          build-script: ../../../../build.py
           compiler: ${{ matrix.compiler }}
           compiler-versions: ${{ matrix.compiler_version }}
           docker-images: ${{ matrix.docker_image }}
         env:
-          CONAN_REFERENCE: 'xcb-proto/${{ matrix.xcb-proto_versions }}'
+          CONAN_REFERENCE: 'xcb-proto/${{ matrix.xcb-proto_version }}'
+          CONAN_VISUAL_RUNTIMES: ${{ matrix.vs_runtimes }}
+          CONAN_ARCHS: ${{ matrix.archs }}
+          CONAN_BUILD_TYPES: ${{ matrix.build_types }}
+          DEVELOPER_DIR: /Applications/Xcode_${{ matrix.xcode_version }}.app/Contents/Developer          
+      - name: Build libxdmcp
+        uses: trassir/run-cpt@v0.2.2-trassir
+        with:
+          install: custom
+          # TODO: replace when https://github.com/conan-io/conan-package-tools/issues/479 will be fixed upstream
+          custom-package: git+https://github.com/trassir/conan-package-tools@fix-479-trassir
+          work-dir: sources/recipes/x11/cb-proto/${{ matrix.xcb-proto_versions }}
+          build-script: ../../../../build.py
+          compiler: ${{ matrix.compiler }}
+          compiler-versions: ${{ matrix.compiler_version }}
+          docker-images: ${{ matrix.docker_image }}
+        env:
+          CONAN_REFERENCE: 'libxdmcp/${{ matrix.libxdmcp_version }}'
           CONAN_VISUAL_RUNTIMES: ${{ matrix.vs_runtimes }}
           CONAN_ARCHS: ${{ matrix.archs }}
           CONAN_BUILD_TYPES: ${{ matrix.build_types }}

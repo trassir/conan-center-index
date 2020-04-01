@@ -4,7 +4,7 @@ import glob
 import shutil
 
 
-class xcbprotoConan(ConanFile):
+class BaseHeaderOnly(ConanFile):
     homepage = "https://www.x.org/wiki/"
     license = "X11"
     url = "https://github.com/bincrafters/conan-x11"
@@ -13,13 +13,6 @@ class xcbprotoConan(ConanFile):
     _source_subfolder = "source_subfolder"
     generators = "pkg_config"
     _autotools = None
-
-    name = "xcb-proto"
-    version = "1.13"
-    tags = ("conan", "xcb-proto")
-    description = 'XML-XCB protocol descriptions used by libxcb for the X11 protocol & extensions'
-    exports = ["conanfile_base.py", "patches/*.patch"]
-    _patches = []
 
     def package_info(self):
         if self.name.startswith('lib') and not self.name in ['libfs']:
@@ -69,15 +62,41 @@ class xcbprotoConan(ConanFile):
 
         with tools.chdir(self._source_subfolder):
             autotools = self._configure_autotools()
-            autotools.make()    
+            autotools.make()
 
-    def source(self):
-        url = "https://www.x.org/archive/individual/xcb/xcb-proto-1.13.tar.gz"
-        tools.get(url, sha256="0698e8f596e4c0dbad71d3dc754d95eb0edbb42df5464e0f782621216fa33ba7")
-        for p in self._patches:
-            tools.patch(".", "patches/%s" % p)
-        extracted_dir = "xcb-proto-" + self.version
-        os.rename(extracted_dir, self._source_subfolder)
 
-        
-        
+class BaseLib(BaseHeaderOnly):
+    options = {"shared": [True, False], "fPIC": [True, False]}
+    default_options = {"shared": False, "fPIC": True}
+
+    def configure(self):
+        super(BaseLib, self).configure()
+        if self.settings.os == "Windows":
+            del self.options.fPIC
+
+    @property
+    def _configure_args(self):
+        if self.options.shared:
+            return ["--disable-static", "--enable-shared"]
+        else:
+            return ["--disable-shared", "--enable-static"]
+
+    def package(self):
+        super(BaseLib, self).package()
+        libdir = os.path.join(self.package_folder, "lib")
+        if os.path.isdir(libdir):
+            with tools.chdir(libdir):
+                # libtool *.la files have hard-coded paths
+                for filename in glob.glob("*.la"):
+                    os.unlink(filename)
+                # libXaw has broken symlinks
+                if not self.options.shared:
+                    for filename in glob.glob("*.dylib"):
+                        os.unlink(filename)
+                    for filename in glob.glob("*.so"):
+                        os.unlink(filename)
+                    for filename in glob.glob("*.so.*"):
+                        os.unlink(filename)
+
+    def package_id(self):
+        pass
