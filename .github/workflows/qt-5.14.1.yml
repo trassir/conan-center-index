@@ -34,6 +34,7 @@ jobs:
                             qt:qtimageformats=True,
                             qt:qtscript=True,
                             qt:qttools=True,
+                            qt:shared=True,
 
                             qt:with_glib=False,
                             qt:with_icu=False,
