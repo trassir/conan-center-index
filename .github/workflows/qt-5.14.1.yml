@@ -38,7 +38,7 @@ jobs:
                             qt:qtscript=True,
                             qt:qttools=True,
                             qt:shared=True,
-                            qt:x11extras=True,
+                            qt:qtx11extras=True,
 
                             qt:with_glib=False,
                             qt:with_icu=False,
@@ -60,7 +60,7 @@ jobs:
                             qt:qtscript=True,
                             qt:qttools=True,
                             qt:shared=True,
-                            qt:x11extras=True,
+                            qt:qtx11extras=True,
 
                             qt:with_glib=False,
                             qt:with_icu=False,
