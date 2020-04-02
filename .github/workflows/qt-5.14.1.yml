@@ -24,26 +24,7 @@ jobs:
     strategy:
       matrix:
         build: ['linux-gcc8', 'linux-gcc9', 'macos']
-        include:
-          - build: 'linux-gcc8'
-            os: 'ubuntu-latest'
-            compiler: 'gcc'
-            compiler_version: '8'
-            docker_image: 'conanio/gcc8'
-            build_types: 'Release,Debug'
-            archs: 'x86,x86_64'
-          - build: 'linux-gcc9'
-            os: 'ubuntu-latest'
-            compiler: 'gcc'
-            compiler_version: '9'
-            docker_image: 'conanio/gcc9'
-            build_types: 'Release,Debug'
-            archs: 'x86,x86_64'
-          - build: 'macos'
-            os: 'macos-10.15'
-            build_types: 'Release,Debug'
-            archs: 'x86_64'
-            conan_options: 'qt:openssl=False,
+        conan_options_mac: 'qt:openssl=False,
                             qt:qtsvg=True,
                             qt:qtimageformats=True,
                             qt:qtscript=True,
@@ -57,6 +38,43 @@ jobs:
                             qt:with_mysql=False,
                             qt:with_sdl2=False,
                             qt:with_zstd=False'
+        conan_options_linux: 'qt:openssl=False,
+                            qt:qtsvg=True,
+                            qt:qtimageformats=True,
+                            qt:qtscript=True,
+                            qt:qttools=True,
+                            qt:shared=True,
+                            qt:x11extras=True,
+
+                            qt:with_glib=False,
+                            qt:with_icu=False,
+                            qt:with_harfbuzz=False,
+                            qt:with_pcre2=False,
+                            qt:with_mysql=False,
+                            qt:with_sdl2=False,
+                            qt:with_zstd=False'
+        include:
+          - build: 'linux-gcc8'
+            os: 'ubuntu-latest'
+            compiler: 'gcc'
+            compiler_version: '8'
+            docker_image: 'conanio/gcc8'
+            build_types: 'Release,Debug'
+            archs: 'x86,x86_64'
+            conan_options: ${{ matrix.conan_options_linux }}
+          - build: 'linux-gcc9'
+            os: 'ubuntu-latest'
+            compiler: 'gcc'
+            compiler_version: '9'
+            docker_image: 'conanio/gcc9'
+            build_types: 'Release,Debug'
+            archs: 'x86,x86_64'
+            conan_options: ${{ matrix.conan_options_linux }}
+          - build: 'macos'
+            os: 'macos-10.15'
+            build_types: 'Release,Debug'
+            archs: 'x86_64'
+            conan_options: ${{ matrix.conan_options_mac }}
             compiler: 'apple_clang'
             compiler_version: '11.0'
             xcode_version: '11.4'
