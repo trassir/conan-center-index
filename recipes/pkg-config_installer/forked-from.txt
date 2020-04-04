@@ -1,0 +1,1 @@
+https://github.com/bincrafters/conan-pkg-config_installer/commit/b7c4d798829eb33d94884d89851c4851f5165090
