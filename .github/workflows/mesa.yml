@@ -58,12 +58,18 @@ jobs:
       - name: Install pkg-config
         if: matrix.os == 'macos-latest'
         run: brew install pkg-config
+        if: matrix.os == 'ubuntu-latest'
+        run: sudo apt update && sudo apt install pkg-config
       - name: Install bison
         if: matrix.os == 'macos-latest'
         run: brew install bison
+        if: matrix.os == 'ubuntu-latest'
+        run: sudo apt install bison
       - name: Install flex
         if: matrix.os == 'macos-latest'
         run: brew install flex
+        if: matrix.os == 'ubuntu-latest'
+        run: sudo apt install flex
       - name: Configure git
         run: git config --global core.autocrlf false
         shell: bash
