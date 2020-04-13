@@ -12,6 +12,9 @@ class QtWebKitConan(ConanFile):
     topics = ("qt", "browser-engine", "webkit", "qt5", "qml", "qtwebkit")
     settings = "os", "compiler", "build_type", "arch"
     generators = 'cmake'
+    exports_sources = [
+        "clang-11-jsc.patch",
+    ]
     _source_subfolder = "source_subfolder"
     _build_subfolder = "build_subfolder"
 
@@ -24,7 +27,7 @@ class QtWebKitConan(ConanFile):
         "with_webkit2": [True, False],
         "with_woff2": [True, False]
         }
-  
+
     default_options = {
         "icu:shared": True,
 
@@ -89,8 +92,16 @@ class QtWebKitConan(ConanFile):
             pass # TODO wait until https://github.com/qtwebkit/conan-woff2 will be deployed on bintray
 
     def source(self):
-        tools.get(f'{self.homepage}/releases/download/{self.name}-{self.version}/{self.name}-{self.version}.tar.xz')
+        tools.get(f'{self.homepage}/releases/download/{self.name}-{self.version}/{self.name}-{self.version}.tar.xz',
+                  sha256='9ca126da9273664dd23a3ccd0c9bebceb7bb534bddd743db31caf6a5a6d4a9e6')
         os.rename(f'{self.name}-{self.version}', self._source_subfolder)
+
+        # check recipe conistency
+        tools.check_with_algorithm_sum("sha1", "clang-11-jsc.patch", "c8d0b0c68f96b58e07c22276086ac9007cc761e2")
+
+        # apply patches
+        if tools.is_apple_os(self.settings.os):
+            tools.patch(base_path = self._source_subfolder, patch_file = "clang-11-jsc.patch", strip = 1)
 
     def _configure_cmake(self):
         cmake = CMake(self)
@@ -98,6 +109,8 @@ class QtWebKitConan(ConanFile):
         cmake.definitions["PORT"] = "Qt"
         cmake.definitions["ENABLE_DEVICE_ORIENTATION"] = "OFF"
         cmake.definitions["ENABLE_TEST_SUPPORT"] = "OFF"
+        if tools.is_apple_os(self.settings.os):
+            cmake.definitions["USE_QT_MULTIMEDIA"] = "OFF"
 
         # TODO on linux we should check kernel version. On kernels < 3.4 bmalloc cannot be compiled
         if not self.options["with_bmalloc"]:
