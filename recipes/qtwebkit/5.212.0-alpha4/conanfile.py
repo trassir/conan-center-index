@@ -53,6 +53,7 @@ class QtWebKitConan(ConanFile):
 
         "qt:with_glib": False,
         "qt:with_harfbuzz": False,
+        "qt:with_icu": False,
         "qt:with_pcre2": False,
         "qt:with_mysql": False,
         "qt:with_sdl2": False,
