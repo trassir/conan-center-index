@@ -81,6 +81,10 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v1
         with:
+          python-version: '2.7.16'
+      - name: Setup Python
+        uses: actions/setup-python@v1
+        with:
           python-version: '3.x'
       - name: Build and Optionally Upload
         uses: trassir/run-cpt@v0.2.2-trassir
