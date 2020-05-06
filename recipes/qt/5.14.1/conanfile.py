@@ -364,6 +364,11 @@ class QtConan(ConanFile):
         for p in self.conan_data["patches"][self.version]:
             tools.patch(**p)
 
+        if self.settings.os == "Linux":
+            tools.replace_in_file(join("qt5", "qtbase", "mkspecs", "common", "linux", "linux.conf"),\
+                                  "QMAKE_LIBS_OPENGL       = -lGL",\
+                                  "QMAKE_LIBS_OPENGL       = -lGL -ldrm -lxcb-dri3")
+
     def _xplatform(self):
         if self.settings.os == "Linux":
             if self.settings.compiler == "gcc":
