@@ -445,7 +445,7 @@ class QtConan(ConanFile):
         return None
 
     def build(self):
-        args = ["-confirm-license", "-silent", "-nomake examples", "-nomake tests",
+        args = ["-confirm-license", "-silent", "-nomake examples", "-nomake tests", "-no-feature-accessibility",
                 "-prefix %s" % self.package_folder]
         if self.options.commercial:
             args.append("-commercial")
