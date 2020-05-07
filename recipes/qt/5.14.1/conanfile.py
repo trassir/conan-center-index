@@ -365,9 +365,10 @@ class QtConan(ConanFile):
             tools.patch(**p)
 
         if self.settings.os == "Linux":
-            tools.replace_in_file(join("qt5", "qtbase", "mkspecs", "common", "linux", "linux.conf"),\
+            tools.replace_in_file(os.path.join(self.source_folder, "qt5", "qtbase", "mkspecs", "common", "linux.conf"),\
                                   "QMAKE_LIBS_OPENGL       = -lGL",\
                                   "QMAKE_LIBS_OPENGL       = -lGL -ldrm -lxcb-dri3")
+
 
     def _xplatform(self):
         if self.settings.os == "Linux":
@@ -695,6 +696,11 @@ class QtConan(ConanFile):
           "Qt5Widgets",
           "Qt5Xml"
         ]
+        if self.options.qtmultimedia:
+            libs.extend([
+                "Qt5Multimedia",
+                "Qt5MultimediaWidgets"
+                ])
         if os_info.is_linux:
             libs.append("Qt5X11Extras")
         self.cpp_info.libdirs.append('lib')
