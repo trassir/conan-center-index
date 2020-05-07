@@ -59,7 +59,7 @@ jobs:
         env:
           CONAN_REFERENCE: 'openal/${{ matrix.openal_versions }}'
           CONAN_OPTIONS: "openal:shared=True"
-          CONAN_SHARED_OPTION_NAME: "openal:shared"
+          CONAN_SHARED_OPTION_NAME: False
           CONAN_VISUAL_RUNTIMES: ${{ matrix.vs_runtimes }}
           CONAN_ARCHS: ${{ matrix.archs }}
           CONAN_BUILD_TYPES: ${{ matrix.build_types }}
