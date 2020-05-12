@@ -30,7 +30,7 @@ jobs:
             os: 'ubuntu-latest'
             compiler: 'gcc'
             compiler_version: '8'
-            docker_image: 'trassiross/conan-gcc8'
+            docker_image: 'trassiross/conan-gcc8:frombase'
             build_types: 'Release'
             archs: 'x86_64'
           - build: 'macos'
