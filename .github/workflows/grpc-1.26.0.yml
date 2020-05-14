@@ -1,50 +1,38 @@
-name: grpc-1.20.0 CI
+name: grpc-1.26.0 CI
 
 on:
   pull_request:
     paths:
-      - 'recipes/grpc/1.20.0/**'
+      - 'recipes/grpc/1.26.0/**'
       - 'build.py'
-      - '.github/workflows/grpc-1.20.0.yml'
+      - '.github/workflows/grpc-1.26.0.yml'
   push:
     branches:
       - master
     paths:
-      - 'recipes/grpc/1.20.0/**'
+      - 'recipes/grpc/1.26.0/**'
       - 'build.py'
-      - '.github/workflows/grpc-1.20.0.yml'
+      - '.github/workflows/grpc-1.26.0.yml'
 
 env:
   CONAN_PASSWORD: ${{ secrets.BintrayApiKey }}
-  CONAN_REFERENCE: 'grpc/1.20.0'
+  CONAN_REFERENCE: 'grpc/1.26.0'
+  IS_PURE_C: true
+  CONAN_OPTIONS: 'openssl:shared=True'
 
 jobs:
   grpc:
     strategy:
       matrix:
-        build: ['linux-gcc4.8', 'linux-gcc7', 'linux-gcc9']
+        build: ['linux-gcc8']
         include:
-          - build: 'linux-gcc4.8'
+          - build: 'linux-gcc8'
             os: 'ubuntu-latest'
             compiler: 'gcc'
-            compiler_version: '4.8'
-            docker_image: 'conanio/gcc48'
-            build_types: 'Release,Debug'
-            archs: 'x86,x86_64'
-          - build: 'linux-gcc7'
-            os: 'ubuntu-latest'
-            compiler: 'gcc'
-            compiler_version: '7'
-            docker_image: 'conanio/gcc7'
-            build_types: 'Release,Debug'
-            archs: 'x86,x86_64'
-          - build: 'linux-gcc9'
-            os: 'ubuntu-latest'
-            compiler: 'gcc'
-            compiler_version: '9'
-            docker_image: 'conanio/gcc9'
-            build_types: 'Release,Debug'
-            archs: 'x86,x86_64'
+            compiler_version: '8'
+            docker_image: 'trassiross/conan-gcc8'
+            build_types: 'Release'
+            archs: 'x86_64'
     runs-on: ${{ matrix.os }}
     steps:
       - name: Configure git
@@ -64,12 +52,13 @@ jobs:
           install: custom
           # TODO: replace when https://github.com/conan-io/conan-package-tools/issues/479 will be fixed upstream
           custom-package: git+https://github.com/trassir/conan-package-tools@fix-479-trassir
-          work-dir: sources/recipes/grpc/1.20.0
+          work-dir: sources/recipes/grpc/1.26.0
           build-script: ../../../build.py
           compiler: ${{ matrix.compiler }}
           compiler-versions: ${{ matrix.compiler_version }}
           docker-images: ${{ matrix.docker_image }}
         env:
+          CONAN_SHARED_OPTION_NAME: False
           CONAN_VISUAL_RUNTIMES: ${{ matrix.vs_runtimes }}
           CONAN_ARCHS: ${{ matrix.archs }}
           CONAN_BUILD_TYPES: ${{ matrix.build_types }}

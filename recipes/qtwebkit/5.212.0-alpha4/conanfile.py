@@ -12,9 +12,6 @@ class QtWebKitConan(ConanFile):
     topics = ("qt", "browser-engine", "webkit", "qt5", "qml", "qtwebkit")
     settings = "os", "compiler", "build_type", "arch"
     generators = 'cmake'
-    exports_sources = [
-        "clang-11-jsc.patch",
-    ]
     _source_subfolder = "source_subfolder"
     _build_subfolder = "build_subfolder"
 
@@ -53,6 +50,9 @@ class QtWebKitConan(ConanFile):
         "qt:qtx11extras": platform.system() == "Linux",
         "qt:qtimageformats": True,
         "qt:qtscript": True,
+        "qt:openssl": True,
+        "qt:qttools": True,
+        "qt:qtmultimedia" : True,
 
         "qt:with_glib": False,
         "qt:with_harfbuzz": False,
