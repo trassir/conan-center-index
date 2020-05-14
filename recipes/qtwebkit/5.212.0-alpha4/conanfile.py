@@ -12,6 +12,9 @@ class QtWebKitConan(ConanFile):
     topics = ("qt", "browser-engine", "webkit", "qt5", "qml", "qtwebkit")
     settings = "os", "compiler", "build_type", "arch"
     generators = 'cmake'
+    exports_sources = [
+        "clang-11-jsc.patch",
+    ]
     _source_subfolder = "source_subfolder"
     _build_subfolder = "build_subfolder"
 
