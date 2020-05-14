@@ -97,7 +97,7 @@ class QtWebKitConan(ConanFile):
         os.rename(f'{self.name}-{self.version}', self._source_subfolder)
 
         # check recipe conistency
-        tools.check_with_algorithm_sum("sha1", "clang-11-jsc.patch", "c8d0b0c68f96b58e07c22276086ac9007cc761e2")
+        tools.check_with_algorithm_sum("sha1", "clang-11-jsc.patch", "03358658f12a895d00f5a7544618dc7019fb2882")
 
         # apply patches
         if tools.is_apple_os(self.settings.os):

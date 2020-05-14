@@ -1,5 +1,5 @@
---- a/Source/JavaScriptCore/jsc.cpp     2020-03-04 20:16:37.000000000 +0300
-+++ b/Source/JavaScriptCore/jsc.cpp     2020-04-13 18:47:56.000000000 +0300
+--- a/Source/JavaScriptCore/jsc.cpp
++++ b/Source/JavaScriptCore/jsc.cpp
 @@ -189,7 +189,7 @@
 
  class ElementHandleOwner : public WeakHandleOwner {
