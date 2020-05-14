@@ -16,7 +16,7 @@ on:
 
 env:
   CONAN_PASSWORD: ${{ secrets.BintrayApiKey }}
-  IS_PURE_C: false
+  IS_PURE_C: true # qt builds too long to wait for both libstdc++ and libstdc++11
   CONAN_REFERENCE: qt/5.14.1
 
 jobs:
