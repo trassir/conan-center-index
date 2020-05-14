@@ -16,6 +16,7 @@ on:
 
 env:
   CONAN_PASSWORD: ${{ secrets.BintrayApiKey }}
+  IS_PURE_C: true # TODO: libstdc++11 causes some builds to fail, see https://success.trassir.com/T8348
 
 jobs:
   protoc:
