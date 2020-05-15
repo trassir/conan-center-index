@@ -16,9 +16,8 @@ on:
 
 env:
   CONAN_PASSWORD: ${{ secrets.BintrayApiKey }}
-  IS_PURE_C: false
+  IS_PURE_C: true # qt builds too long to wait for both libstdc++ and libstdc++11
   CONAN_REFERENCE: qt/5.14.1
-  CONAN_DOCKER_ENTRY_SCRIPT: "sudo ln -s /usr/bin/g++-8 /usr/bin/g++"
 
 jobs:
   qt_5_14_1:
@@ -40,13 +39,13 @@ jobs:
                             qt:qtsvg=True,
                             qt:qttools=True,
                             qt:qtx11extras=True,
-                            qt:shared=True,                            
+                            qt:shared=True,
 
                             qt:with_glib=False,
                             qt:with_harfbuzz=False,
                             qt:with_icu=False,
                             qt:with_mysql=False,
-                            qt:with_pcre2=False,                            
+                            qt:with_pcre2=False,
                             qt:with_sdl2=False,
                             qt:with_zstd=False
                             '
