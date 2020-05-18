@@ -12,7 +12,7 @@ class JsoncppConan(ConanFile):
     settings = "os", "compiler", "arch", "build_type"
     options = {"shared": [True, False], "fPIC": [True, False]}
     default_options = {"shared": False, "fPIC": True}
-    exports_sources = "CMakeLists.txt"
+    exports_sources = [ "CMakeLists.txt", "dssl-arm.patch" ]
     generators = "cmake"
 
     _source_subfolder = "source_subfolder"
@@ -25,6 +25,7 @@ class JsoncppConan(ConanFile):
         tools.get(**self.conan_data["sources"][self.version])
         extracted_dir = "jsoncpp-{}".format(self.version)
         os.rename(extracted_dir, self._source_subfolder)
+        self._patch_sources()
 
     def _patch_sources(self):
         tools.replace_in_file(os.path.join(self._source_subfolder, "CMakeLists.txt"),
@@ -48,6 +49,9 @@ class JsoncppConan(ConanFile):
                               "add_subdirectory( example )",
                               "",
                               strict=False)
+        # trassir-specific, mostly for older gcc
+        if str(self.settings.arch).startswith('hi35'):
+            tools.patch(base_path=self._source_subfolder, patch_file='dssl-arm.patch')
 
     def _configure_cmake(self):
         cmake = CMake(self)
@@ -59,7 +63,6 @@ class JsoncppConan(ConanFile):
         return cmake
 
     def build(self):
-        self._patch_sources()
         cmake = self._configure_cmake()
         cmake.build()
 

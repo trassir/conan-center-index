@@ -21,7 +21,7 @@ jobs:
   jsoncpp:
     strategy:
       matrix:
-        build: ['linux-gcc8', 'windows-2019-release', 'macos']
+        build: ['linux-gcc8', 'windows-2019-release', 'macos', 'linux-arm']
         include:
           - build: 'linux-gcc8'
             os: 'ubuntu-latest'
@@ -47,6 +47,12 @@ jobs:
             compiler_version: '11.0'
             xcode_version: '11.3.1'
             conan_reference: "jsoncpp/1.8.3"
+          - build: 'linux-arm'
+            os: 'self-hosted'
+            build_types: 'Release'
+            docker_image: 'trassiross/conan-arm'
+            arm_platforms: 'hi3520dv300 hi3521av100 hi3521dv100 hi3531av100 hi3531d hi3536 hi3536dv100'
+            conan_reference: "jsoncpp/1.8.4"
     runs-on: ${{ matrix.os }}
     steps:
       - name: Configure git
@@ -79,3 +85,4 @@ jobs:
           CONAN_ARCHS: ${{ matrix.archs }}
           CONAN_BUILD_TYPES: ${{ matrix.build_types }}
           DEVELOPER_DIR: /Applications/Xcode_${{ matrix.xcode_version }}.app/Contents/Developer
+          ARM_PLATFORMS: ${{ matrix.arm_platforms }}

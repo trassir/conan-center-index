@@ -1,0 +1,57 @@
+diff -ru a/include/json/value.h b/include/json/value.h
+--- a/include/json/value.h	2017-12-21 00:07:10.000000000 +0300
++++ b/include/json/value.h	2018-03-13 15:19:15.919633256 +0300
+@@ -401,7 +401,7 @@
+   bool empty() const;
+ 
+   /// Return !isNull()
+-  explicit operator bool() const;
++  operator bool() const;
+ 
+   /// Remove all object members and array elements.
+   /// \pre type() is arrayValue, objectValue, or nullValue
+diff -ru a/src/lib_json/json_value.cpp b/src/lib_json/json_value.cpp
+--- a/src/lib_json/json_value.cpp	2017-12-21 00:07:10.000000000 +0300
++++ b/src/lib_json/json_value.cpp	2018-03-13 15:21:03.245246622 +0300
+@@ -277,7 +277,7 @@
+ #if JSON_HAS_RVALUE_REFERENCES
+ Value::CZString::CZString(CZString&& other)
+   : cstr_(other.cstr_), index_(other.index_) {
+-  other.cstr_ = nullptr;
++  other.cstr_ = NULL;
+ }
+ #endif
+ 
+@@ -302,7 +302,7 @@
+ Value::CZString& Value::CZString::operator=(CZString&& other) {
+   cstr_ = other.cstr_;
+   index_ = other.index_;
+-  other.cstr_ = nullptr;
++  other.cstr_ = NULL;
+   return *this;
+ }
+ #endif
+diff -ru a/src/lib_json/json_reader.cpp b/src/lib_json/json_reader.cpp
+--- a/src/lib_json/json_reader.cpp	2017-12-21 00:07:10.000000000 +0300
++++ b/src/lib_json/json_reader.cpp	2018-03-12 12:47:26.053191138 +0300
+@@ -32,7 +32,7 @@
+ #define snprintf snprintf
+ #elif __cplusplus >= 201103L
+ #if !defined(__MINGW32__) && !defined(__CYGWIN__)
+-#define snprintf std::snprintf
++//#define snprintf std::snprintf
+ #endif
+ #endif
+ 
+diff -ru a/src/lib_json/json_writer.cpp b/src/lib_json/json_writer.cpp
+--- a/src/lib_json/json_writer.cpp	2017-12-21 00:07:10.000000000 +0300
++++ b/src/lib_json/json_writer.cpp	2018-03-12 12:47:46.797190187 +0300
+@@ -58,7 +58,7 @@
+ #define snprintf snprintf
+ #elif __cplusplus >= 201103L
+ #if !defined(__MINGW32__) && !defined(__CYGWIN__)
+-#define snprintf std::snprintf
++//#define snprintf std::snprintf
+ #endif
+ #endif
+ 
