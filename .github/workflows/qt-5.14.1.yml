@@ -29,7 +29,6 @@ jobs:
       qt:qtscript=True,
       qt:qtsvg=True,
       qt:qttools=True,
-      qt:shared=True,
 
       qt:with_glib=False,
       qt:with_harfbuzz=False,
