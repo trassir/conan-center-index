@@ -14,7 +14,7 @@ if __name__ == "__main__":
 
     upload_repo = "https://api.bintray.com/conan/trassir/conan-public"
     if platform.system() != "Linux":
-        upload_repo = ("https://api.bintray.com/conan/trassir/conan-public", True, "bintray-trassir")
+        upload_repo = (upload_repo, True, "bintray-trassir")
 
     is_pure_c = get_bool_from_env('IS_PURE_C')
     builder = ConanMultiPackager(
