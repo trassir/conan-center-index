@@ -13,7 +13,7 @@ if __name__ == "__main__":
         environ["CONAN_OPTIONS"] = "*:shared=True"
 
     upload_repo = "https://api.bintray.com/conan/trassir/conan-public"
-    if platform.system() == "Darwin":
+    if platform.system() != "Linux":
         upload_repo = ("https://api.bintray.com/conan/trassir/conan-public", True, "bintray-trassir")
 
     is_pure_c = get_bool_from_env('IS_PURE_C')
