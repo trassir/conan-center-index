@@ -22,25 +22,19 @@ jobs:
   jasper:
     strategy:
       matrix:
-        build: ['linux-gcc7', 'windows-2019-release', 'macos']
+        build: ['linux-gcc8', 'macos']
         jasper_versions: ['2.0.14']
         include:
-          - build: 'linux-gcc7'
+          - build: 'linux-gcc8'
             os: 'ubuntu-latest'
             compiler: 'gcc'
-            compiler_version: '7'
+            compiler_version: '8'
             docker_image: 'trassiross/conan-gcc8'
             build_types: 'Release'
             archs: 'x86_64'
-          - build: 'windows-2019-release'
-            os: 'windows-2019'
-            build_types: 'Release'
-            compiler: 'vs'
-            compiler_version: '16'
-            vs_runtimes: 'MD,MT'
-            archs: 'x86_64'
           - build: 'macos'
             os: 'macos-10.15'
+            deployment-target: '10.14'
             build_types: 'Release'
             archs: 'x86_64'
             compiler: 'apple_clang'
@@ -71,6 +65,7 @@ jobs:
           compiler-versions: ${{ matrix.compiler_version }}
           docker-images: ${{ matrix.docker_image }}
         env:
+          MACOSX_DEPLOYMENT_TARGET: ${{ matrix.deployment-target }}
           CONAN_SHARED_OPTION_NAME: False
           CONAN_REFERENCE: 'jasper/${{ matrix.jasper_versions }}'
           CONAN_VISUAL_RUNTIMES: ${{ matrix.vs_runtimes }}

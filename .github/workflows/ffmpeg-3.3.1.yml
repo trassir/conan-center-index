@@ -34,11 +34,12 @@ jobs:
             archs: 'x86_64'
           - build: 'macos'
             os: 'macos-10.15'
+            deployment-target: '10.14'
             build_types: 'Release'
             archs: 'x86_64'
             compiler: 'apple_clang'
             compiler_version: '11.0'
-            xcode_version: '11.3.1'
+            xcode_version: '11.4'
     runs-on: ${{ matrix.os }}
     steps:
       - name: Install pkg-config
@@ -68,6 +69,7 @@ jobs:
           docker-images: ${{ matrix.docker_image }}
         env:
           CONAN_OPTIONS: 'ffmpeg:pulse=False, ffmpeg:vdpau=False'
+          MACOSX_DEPLOYMENT_TARGET: ${{ matrix.deployment-target }}
           CONAN_SHARED_OPTION_NAME: False
           CONAN_VISUAL_RUNTIMES: ${{ matrix.vs_runtimes }}
           CONAN_ARCHS: ${{ matrix.archs }}
