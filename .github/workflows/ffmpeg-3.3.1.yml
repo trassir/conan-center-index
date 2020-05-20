@@ -29,7 +29,7 @@ jobs:
             os: 'ubuntu-latest'
             compiler: 'gcc'
             compiler_version: '8'
-            docker_image: 'conanio/gcc8'
+            docker_image: 'trassiross/conan-gcc8'
             build_types: 'Release'
             archs: 'x86_64'
           - build: 'macos'
@@ -39,7 +39,7 @@ jobs:
             archs: 'x86_64'
             compiler: 'apple_clang'
             compiler_version: '11.0'
-            xcode_version: '11.3.1'
+            xcode_version: '11.4'
     runs-on: ${{ matrix.os }}
     steps:
       - name: Install pkg-config
@@ -69,7 +69,6 @@ jobs:
           docker-images: ${{ matrix.docker_image }}
         env:
           MACOSX_DEPLOYMENT_TARGET: ${{ matrix.deployment-target }}
-          CONAN_OPTIONS: "ffmpeg:shared=True"
           CONAN_SHARED_OPTION_NAME: False
           CONAN_VISUAL_RUNTIMES: ${{ matrix.vs_runtimes }}
           CONAN_ARCHS: ${{ matrix.archs }}

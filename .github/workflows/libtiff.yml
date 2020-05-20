@@ -29,7 +29,7 @@ jobs:
             os: 'ubuntu-latest'
             compiler: 'gcc'
             compiler_version: '7'
-            docker_image: 'conanio/gcc7'
+            docker_image: 'trassiross/conan-gcc8'
             build_types: 'Release'
             archs: 'x86_64'
           - build: 'windows-2019-release'
@@ -73,10 +73,9 @@ jobs:
           docker-images: ${{ matrix.docker_image }}
         env:
           MACOSX_DEPLOYMENT_TARGET: ${{ matrix.deployment-target }}
-          CONAN_OPTIONS: "libtiff:shared=True"
+          CONAN_OPTIONS: 'libtiff:lzma=False'
           CONAN_SHARED_OPTION_NAME: False
           CONAN_REFERENCE: 'libtiff/${{ matrix.libtiff_versions }}'
-          CONAN_OPTIONS: 'libtiff:lzma=False'
           CONAN_VISUAL_RUNTIMES: ${{ matrix.vs_runtimes }}
           CONAN_ARCHS: ${{ matrix.archs }}
           CONAN_BUILD_TYPES: ${{ matrix.build_types }}

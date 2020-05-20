@@ -29,7 +29,7 @@ jobs:
             os: 'ubuntu-latest'
             compiler: 'gcc'
             compiler_version: '8'
-            docker_image: 'conanio/gcc8'
+            docker_image: 'trassiross/conan-gcc8'
             build_types: 'Release'
             archs: 'x86_64'
           - build: 'windows-2019-release'
@@ -73,7 +73,6 @@ jobs:
           docker-images: ${{ matrix.docker_image }}
         env:
           MACOSX_DEPLOYMENT_TARGET: ${{ matrix.deployment-target }}
-          CONAN_OPTIONS: "libalsa:shared=True"
           CONAN_SHARED_OPTION_NAME: False
           CONAN_REFERENCE: 'libalsa/${{ matrix.libalsa_versions }}'
           CONAN_VISUAL_RUNTIMES: ${{ matrix.vs_runtimes }}
