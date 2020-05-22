@@ -16,6 +16,7 @@ class ProtocConanFile(ConanFile):
     exports_sources = ["CMakeLists.txt", "protoc.patch"]
     generators = "cmake"
     short_paths = True
+    keep_imports = True
 
     _source_subfolder = "source_subfolder"
     _build_subfolder = "build_subfolder"
@@ -45,22 +46,21 @@ class ProtocConanFile(ConanFile):
         extracted_dir = self._base_name + "-" + self.version
         os.rename(extracted_dir, self._source_subfolder)
 
+    def imports(self):
+        # when built with protobuf:shared=True, protoc will require its libraries to run
+        # so we copy those from protobuf package
+        if tools.os_info.is_linux:
+            # `ldd` shows dependencies named like libprotoc.so.3.9.1.0
+            self.protobuf_dylib_mask = "*.so.*"
+        else:
+            assert False, "protoc package was not checked on your system"
+        self.copy(self.protobuf_dylib_mask, dst="lib", src="lib", root_package="protobuf")
+
     def package(self):
         self.copy("LICENSE", dst="licenses", src=self._source_subfolder)
         cmake = self._configure_cmake()
         cmake.install()
-
-        # when built with protobuf:shared=True, protoc will require its libraries to run
-        # so we copy those from protobuf package
-        if self.options["protobuf"].shared:
-            protobuf = self.deps_cpp_info["protobuf"]
-            if tools.os_info.is_linux:
-                # `ldd` shows dependencies named like libprotoc.so.3.9.1.0
-                dylib_mask = "*.so.*"
-            else:
-                assert False, "protoc package was not checked on your system"
-            for path in protobuf.lib_paths:
-                self.copy(dylib_mask, dst="lib", src=path)
+        self.copy(self.protobuf_dylib_mask, dst="lib", src="lib")
 
     def package_info(self):
         bindir = os.path.join(self.package_folder, "bin")
