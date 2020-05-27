@@ -38,6 +38,7 @@ class {classname}Conan({baseclass}):
         super({classname}Conan, self).package_info()
         {libs}
         {system_libs}
+        {sharedlinkflags}
 """
 
 current_dir = os.path.abspath(os.path.dirname(__file__))
@@ -86,6 +87,10 @@ def gen(args):
             patches = info["patches"] if "patches" in info else "[]"
             baseclass = "BaseHeaderOnly" if header_only else "BaseLib"
             namespace = info["namespace"] if "namespace" in info else "lib"
+            sharedlinkflags = ""
+            if "ldflags" in info:
+                sharedlinkflags = ['"%s"' % flag for flag in info["ldflags"]]
+                sharedlinkflags = "self.cpp_info.sharedlinkflags.extend([%s])" % ", ".join(sharedlinkflags)
             content = conanfile_template.format(sha256=info["sha256"],
                                                 version=info["version"],
                                                 description=info["description"],
@@ -95,6 +100,7 @@ def gen(args):
                                                 baseclass=baseclass,
                                                 libs=libs,
                                                 system_libs=system_libs,
+                                                sharedlinkflags=sharedlinkflags,
                                                 classname=classname,
                                                 patches=patches)
             f.write(content)
