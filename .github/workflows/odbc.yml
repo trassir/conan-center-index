@@ -40,7 +40,6 @@ jobs:
             compiler: 'apple_clang'
             compiler_version: '11.0'
             xcode_version: '11.4'
-            conan_options: 'odbc:with_libiconv=False'
     runs-on: ${{ matrix.os }}
     steps:
       - name: Configure git
@@ -71,5 +70,4 @@ jobs:
           CONAN_ARCHS: ${{ matrix.archs }}
           CONAN_BUILD_TYPES: ${{ matrix.build_types }}
           CONAN_REFERENCE: odbc/${{ matrix.odbc_versions }}
-          CONAN_OPTIONS: ${{ matrix.conan_options }}
           DEVELOPER_DIR: /Applications/Xcode_${{ matrix.xcode_version }}.app/Contents/Developer
