@@ -61,7 +61,7 @@ class QtConan(ConanFile):
         "with_pcre2": [True, False],
         "with_glib": [True, False],
         # "with_libiconv": [True, False],  # Qt tests failure "invalid conversion from const char** to char**"
-        "with_doubleconversion": [True, False],
+        # "with_doubleconversion": [True, False],
         "with_freetype": [True, False],
         "with_fontconfig": [True, False],
         "with_icu": [True, False],
@@ -97,7 +97,7 @@ class QtConan(ConanFile):
         "with_pcre2": True,
         "with_glib": True,
         # "with_libiconv": True,
-        "with_doubleconversion": True,
+        # "with_doubleconversion": True,
         "with_freetype": True,
         "with_fontconfig": True,
         "with_icu": True,
@@ -290,8 +290,8 @@ class QtConan(ConanFile):
             self.requires("glib/2.64.0")
         # if self.options.with_libiconv:
         #     self.requires("libiconv/1.16")
-        if self.options.with_doubleconversion and not self.options.multiconfiguration:
-            self.requires("double-conversion/3.1.5")
+        # if self.options.with_doubleconversion and not self.options.multiconfiguration:
+        #     self.requires("double-conversion/3.1.5")
         if self.options.with_freetype and not self.options.multiconfiguration:
             self.requires("freetype/2.10.1")
         if self.options.with_fontconfig:
@@ -516,7 +516,7 @@ class QtConan(ConanFile):
             args.append("--alsa=" + ("yes" if self.options.with_libalsa else "no"))
 
         for opt, conf_arg in [
-                              ("with_doubleconversion", "doubleconversion"),
+                              # ("with_doubleconversion", "doubleconversion"),
                               ("with_freetype", "freetype"),
                               ("with_harfbuzz", "harfbuzz"),
                               ("with_libjpeg", "libjpeg"),
@@ -529,13 +529,13 @@ class QtConan(ConanFile):
                     args += ["-system-" + conf_arg]
             else:
                 args += ["-no-" + conf_arg]
-
+        args += ["-qt-doubleconversion"]
         libmap = [("zlib", "ZLIB"),
                   ("openssl", "OPENSSL"),
                   ("pcre2", "PCRE2"),
                   ("glib", "GLIB"),
                   # ("libiconv", "ICONV"),
-                  ("double-conversion", "DOUBLECONVERSION"),
+                  # ("double-conversion", "DOUBLECONVERSION"),
                   ("freetype", "FREETYPE"),
                   ("fontconfig", "FONTCONFIG"),
                   ("icu", "ICU"),
