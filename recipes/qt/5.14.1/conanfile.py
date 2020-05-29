@@ -260,7 +260,7 @@ class QtConan(ConanFile):
         if self.options.multiconfiguration:
             del self.settings.build_type
 
-        if not self.options.with_doubleconversion and str(self.settings.compiler.libcxx) != "libc++":
+        if str(self.settings.compiler.libcxx) != "libc++":
             raise ConanInvalidConfiguration('Qt without libc++ needs qt:with_doubleconversion. '
                                             'Either enable qt:with_doubleconversion or switch to libc++')
 
