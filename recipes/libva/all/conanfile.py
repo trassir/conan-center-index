@@ -33,6 +33,7 @@ class LibvaConan(ConanFile):
             raise NotImplementedError()
 
     def requirements(self):
+        # despite drm being an option, the library is required unconditionally
         self.requires("libdrm/2.4.100")
         if self.options.x11:
             self.requires("libx11/1.6.8")
@@ -50,9 +51,6 @@ class LibvaConan(ConanFile):
             if not os.path.isdir('m4'):
                 os.makedirs('m4')
             self.run('autoreconf -v --install')
-        # for patch in self.conan_data["patches"][self.version]:
-        #     self.output.info("Applying patch {}".format(patch))
-        #     tools.patch(**patch)
 
     def _configure_autotools(self):
         if self._autotools:
