@@ -260,9 +260,9 @@ class QtConan(ConanFile):
         if self.options.multiconfiguration:
             del self.settings.build_type
 
-        if str(self.settings.compiler.libcxx) != "libc++":
-            raise ConanInvalidConfiguration('Qt without libc++ needs qt:with_doubleconversion. '
-                                            'Either enable qt:with_doubleconversion or switch to libc++')
+        # if not self.options.with_doubleconversion and str(self.settings.compiler.libcxx) != "libc++":
+        #    raise ConanInvalidConfiguration('Qt without libc++ needs qt:with_doubleconversion. '
+        #                                    'Either enable qt:with_doubleconversion or switch to libc++')
 
         if tools.os_info.is_linux:
             if self.options.qtwebengine:
