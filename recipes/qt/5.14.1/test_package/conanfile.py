@@ -49,7 +49,7 @@ class TestPackageConan(ConanFile):
                              'QMAKE_LINK_SHLIB=' + value]
 
                 self.run("printenv", run_environment=True)
-                self.run("otool -L qmake", run_environment=True)
+                self.run("otool -L /Users/runner/.conan/data/qt/5.14.1/_/_/package/c954741165be5dec00ded3c094b795797d2eefa2/bin/qmake", run_environment=True)
                 self.run("qmake %s" % " ".join(args), run_environment=True)
                 if tools.os_info.is_windows:
                     if self.settings.compiler == "Visual Studio":
