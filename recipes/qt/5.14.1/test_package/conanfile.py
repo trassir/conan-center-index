@@ -108,7 +108,7 @@ class TestPackageConan(ConanFile):
     def _test_with_cmake(self):
         self.output.info("Testing CMake")
         shutil.copy("qt.conf", "cmake_folder")
-        self.run(os.path.join("cmake_folder", "test_package"), run_environment=True)
+        self.run(os.path.join("cmake_folder", "test_package"), run_environment=False)
 
     def test(self):
         if not tools.cross_building(self.settings, skip_x64_x86=True):
