@@ -51,8 +51,7 @@ class TestPackageConan(ConanFile):
                 if tools.is_apple_os(self.settings.os):
                     self.run("printenv", run_environment=True)
                     self.run("otool -L /Users/runner/.conan/data/qt/5.14.1/_/_/package/c954741165be5dec00ded3c094b795797d2eefa2/bin/qmake", run_environment=True)
-                    build_env['DYLD_LIBRARY_PATH'] = None
-                    with tools.environment_append(build_env):
+                    with tools.environment_append({'DYLD_LIBRARY_PATH': None}):
                         self.run("qmake %s" % " ".join(args), run_environment=True)
                 else:
                     self.run("qmake %s" % " ".join(args), run_environment=True)
