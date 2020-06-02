@@ -123,7 +123,7 @@ class QtConan(ConanFile):
         "sysroot": None,
         "config": None,
         "multiconfiguration": False,
-        "with_builtin_libs": True,
+        "with_builtin_libs": False,
         "libxcb:shared": True,
     }, **{module: False for module in _submodules if module != 'qtbase'}
     )
