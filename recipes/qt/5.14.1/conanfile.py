@@ -290,7 +290,7 @@ class QtConan(ConanFile):
             self.requires("glib/2.64.0")
         # if self.options.with_libiconv:
         #     self.requires("libiconv/1.16")
-        if self.options.with_doubleconversion and not self.options.multiconfiguration:
+        if self.options.with_doubleconversion and not (self.options.multiconfiguration or tools.is_apple_os(self.settings.os)):
             self.requires("double-conversion/3.1.5")
         if self.options.with_freetype and not self.options.multiconfiguration:
             self.requires("freetype/2.10.1")
@@ -298,13 +298,13 @@ class QtConan(ConanFile):
             self.requires("fontconfig/2.13.91")
         if self.options.with_icu:
             self.requires("icu/64.2")
-        if self.options.with_harfbuzz and not self.options.multiconfiguration:
+        if self.options.with_harfbuzz and not (self.options.multiconfiguration or tools.is_apple_os(self.settings.os)):
             self.requires("harfbuzz/2.6.4")
-        if self.options.with_libjpeg and not self.options.multiconfiguration:
+        if self.options.with_libjpeg and not (self.options.multiconfiguration or tools.is_apple_os(self.settings.os)):
             self.requires("libjpeg/9d")
-        if self.options.with_libpng and not self.options.multiconfiguration:
+        if self.options.with_libpng and not (self.options.multiconfiguration or tools.is_apple_os(self.settings.os)):
             self.requires("libpng/1.6.37")
-        if self.options.with_sqlite3 and not self.options.multiconfiguration:
+        if self.options.with_sqlite3 and not (self.options.multiconfiguration or tools.is_apple_os(self.settings.os)):
             self.requires("sqlite3/3.31.0")
             self.options["sqlite3"].enable_column_metadata = True
         if self.options.with_mysql:
@@ -523,7 +523,7 @@ class QtConan(ConanFile):
                               ("with_libpng", "libpng"),
                               ("with_sqlite3", "sqlite")]:
             if getattr(self.options, opt):
-                if self.options.multiconfiguration:
+                if self.options.multiconfiguration or tools.is_apple_os(self.settings.os):
                     args += ["-qt-" + conf_arg]
                 else:
                     args += ["-system-" + conf_arg]
