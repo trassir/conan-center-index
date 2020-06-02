@@ -292,7 +292,7 @@ class QtConan(ConanFile):
         #     self.requires("libiconv/1.16")
         if self.options.with_doubleconversion and not (self.options.multiconfiguration or tools.is_apple_os(self.settings.os)):
             self.requires("double-conversion/3.1.5")
-        if self.options.with_freetype and not self.options.multiconfiguration:
+        if self.options.with_freetype and not (self.options.multiconfiguration or tools.is_apple_os(self.settings.os)):
             self.requires("freetype/2.10.1")
         if self.options.with_fontconfig:
             self.requires("fontconfig/2.13.91")
