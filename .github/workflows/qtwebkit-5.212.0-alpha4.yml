@@ -39,19 +39,9 @@ jobs:
                              '
     strategy:
       matrix:
-        build: ['linux-gcc8', 'macos']
+        build: ['macos']
         qtwebkit_versions: ['5.212.0-alpha4']
         include:
-          - build: 'linux-gcc8'
-            os: 'ubuntu-latest'
-            compiler: 'gcc'
-            compiler_version: '8'
-            docker_image: 'trassiross/conan-gcc8'
-            build_types: 'Release'
-            archs: 'x86_64'
-            conan_options: ',
-                            qt:qtx11extras=True
-                           '
           - build: 'macos'
             os: 'macos-10.15'
             deployment-target: '10.14'
