@@ -70,7 +70,7 @@ def gen(args):
                 requires = "requires = (" + requires + ")"
             else:
                 requires = ""
-            header_only = "header-only" in info and info["header-only"]            
+            header_only = "header-only" in info and info["header-only"]
             system_libs = ""
             if "system_libs" in info:
                 system_libs = ['"%s"' % lib for lib in info["system_libs"]]
