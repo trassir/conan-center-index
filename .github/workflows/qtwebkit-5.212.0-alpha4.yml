@@ -35,7 +35,8 @@ jobs:
                              qt:with_mysql=False,
                              qt:with_pcre2=False,
                              qt:with_sdl2=False,
-                             qt:with_zstd=False
+                             qt:with_zstd=False,
+                             qt:with_builtin_libs=True
                              '
     strategy:
       matrix:
