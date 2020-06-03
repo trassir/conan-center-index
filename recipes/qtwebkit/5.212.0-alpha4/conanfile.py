@@ -87,8 +87,7 @@ class QtWebKitConan(ConanFile):
 
         if platform.system() == "Linux":
             tools.patch(base_path=self._source_subfolder, patch_file="patches/OptionsQt.patch", strip=1)
-
-        tools.patch(base_path=self._source_subfolder, patch_file="patches/cmake_version.patch", strip=1)
+            tools.patch(base_path=self._source_subfolder, patch_file="patches/cmake_version.patch", strip=1)
 
     def _configure_cmake(self):
         cmake = CMake(self)
