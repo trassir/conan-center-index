@@ -106,7 +106,7 @@ class QtConan(ConanFile):
         "with_pcre2": True,
         "with_glib": True,
         # "with_libiconv": True,
-        "with_doubleconversion": "qt",
+        "with_doubleconversion": "system",
         "with_freetype": "system",
         "with_fontconfig": True,
         "with_icu": True,

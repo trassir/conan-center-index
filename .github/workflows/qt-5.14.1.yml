@@ -32,6 +32,7 @@ jobs:
 
       qt:with_glib=False,
       qt:with_harfbuzz=not_used,
+      qt:with_doubleconversion=qt,
       qt:with_icu=False,
       qt:with_mysql=False,
       qt:with_pcre2=False,
