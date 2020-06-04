@@ -7,7 +7,6 @@ from conans import ConanFile, tools, __version__ as conan_version
 from conans.errors import ConanInvalidConfiguration
 from conans.model import Generator
 from conans.tools import Version, os_info
-from enum import IntEnum
 
 
 class qt(Generator):
