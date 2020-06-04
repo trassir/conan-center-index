@@ -547,7 +547,7 @@ class QtConan(ConanFile):
                   ("pcre2", "PCRE2"),
                   ("glib", "GLIB"),
                   # ("libiconv", "ICONV"),
-                  # ("double-conversion", "DOUBLECONVERSION"),
+                  ("double-conversion", "DOUBLECONVERSION"),
                   ("freetype", "FREETYPE"),
                   ("fontconfig", "FONTCONFIG"),
                   ("icu", "ICU"),
