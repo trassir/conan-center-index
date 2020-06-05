@@ -82,8 +82,7 @@ class QtWebKitConan(ConanFile):
         tools.check_with_algorithm_sum("sha1", "patches/cmake_version.patch", "030c7f2d1d6daceee54497eac6c734af457f10bf")
 
         # apply patches
-        if tools.is_apple_os(self.settings.os):
-            tools.patch(base_path=self._source_subfolder, patch_file="patches/clang-11-jsc.patch", strip=1)
+        tools.patch(base_path=self._source_subfolder, patch_file="patches/clang-11-jsc.patch", strip=1)
 
         if platform.system() == "Linux":
             tools.patch(base_path=self._source_subfolder, patch_file="patches/OptionsQt.patch", strip=1)
@@ -132,9 +131,9 @@ class QtWebKitConan(ConanFile):
         pass
 
     def package_info(self):
-        libs = ["QtWebKit", "QtWebKitWidgets"]
+        libs = ["Qt5WebKit", "Qt5WebKitWidgets"]
 
-        if tools.is_apple_os(self.settings.os):           
+        if tools.is_apple_os(self.settings.os):
             self.cpp_info.frameworkdirs = ['lib']
             self.cpp_info.frameworks = libs[:]
         else:
