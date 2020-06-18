@@ -54,7 +54,7 @@ class QtWebKitConan(ConanFile):
     if platform.system() == "Linux":
         requires.append("libxcomposite/0.4.5")
         requires.append("icu/63.2")
-    else if tools.is_apple_os():
+    elif tools.is_apple_os():
         requires.append("icu/64.2")
 
     def build_requirements(self):
