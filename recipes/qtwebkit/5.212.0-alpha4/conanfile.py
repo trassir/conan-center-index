@@ -46,6 +46,7 @@ class QtWebKitConan(ConanFile):
         "libpng/1.6.37",
         "libwebp/1.1.0",
         "sqlite3/3.31.0",
+        "icu/63.2",
         "libxml2/2.9.9",
         "libxslt/1.1.33",
         "zlib/1.2.11"
@@ -53,9 +54,6 @@ class QtWebKitConan(ConanFile):
 
     if platform.system() == "Linux":
         requires.append("libxcomposite/0.4.5")
-        requires.append("icu/63.2")
-    elif tools.is_apple_os():
-        requires.append("icu/64.2")
 
     def build_requirements(self):
         pass
@@ -64,7 +62,7 @@ class QtWebKitConan(ConanFile):
         if self.options["with_webcrypto"]:
             self.requires("libgcrypt/1.8.4@bincrafters/stable")
 
-        if platform.system() == "Linux" and self.options["with_gstreamer"]:
+        if self.options["with_gstreamer"]:
             self.requires("gstreamer/1.16.0@bincrafters/stable")
 
         if self.options["with_libhyphen"]:
