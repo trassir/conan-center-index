@@ -23,9 +23,10 @@ class GStreamerConan(ConanFile):
     exports_sources = ["patches/*.diff"]
 
     requires = ("glib/2.64.0@bincrafters/stable",
+                "libdrm/2.4.100",
+                "libva/1.5.1",
                 "libffi/3.2.1@bincrafters/stable",
                 "mesa/19.3.1",
-                "libdrm/2.4.100",
                 "openh264/1.7.0")
 
     generators = "pkg_config"
@@ -45,6 +46,14 @@ class GStreamerConan(ConanFile):
         if self.settings.os == 'Windows':
             del self.options.fPIC
 
+    def build_requirements(self):
+        self.build_requires("meson/0.53.2")
+    #    if not tools.which("pkg-config") or self.settings.os == "Windows":
+    #        self.build_requires("pkg-config_installer/0.29.2@bincrafters/stable")
+    #    self.build_requires("bison/3.5.3")
+    #    self.build_requires("flex/2.6.4")
+
+
     def source(self):
         tools.get(**self.conan_data["sources"][self.version])
         os.rename("%s-%s" % (self.name, self.version), self._source_subfolder)
@@ -57,6 +66,7 @@ class GStreamerConan(ConanFile):
     def _configure_meson(self):
         meson = Meson(self)
         defs = dict()
+
         defs["ges"] = "disabled"
         defs["vaapi"] = "disabled"
         defs["examples"] = "disabled"
@@ -67,7 +77,7 @@ class GStreamerConan(ConanFile):
         defs["omx"] = "disabled"
         defs["python"] = "disabled"
         defs["gst-examples"] = "disabled"
-        defs["libav"] = "disabled"
+        #defs["libav"] = "disabled"
         meson.configure(build_folder=self._build_subfolder,
                         source_folder=self._source_subfolder,
                         defs=defs)
@@ -87,13 +97,27 @@ class GStreamerConan(ConanFile):
             tools.replace_prefix_in_pc_file(new_pc, prefix)
 
     def build(self):
-        self._apply_patches()
+        #self._apply_patches()
         self._copy_pkg_config("glib")
         #with tools.environment_append(VisualStudioBuildEnvironment(self).vars) if self._is_msvc else tools.no_op():
         meson = self._configure_meson()
         tools.replace_in_file(os.path.join(self._build_subfolder, "..", self._source_subfolder, "subprojects","gstreamer", "meson.build"), "cdata.set('HAVE_UNWIND', 1)", "#cdata.set('HAVE_UNWIND', 1)")
         tools.replace_in_file(os.path.join(self._build_subfolder, "..", self._source_subfolder, "subprojects","gst-devtools", "validate", "gst", "validate", "gst-validate-scenario.c"), "#if !GLIB_CHECK_VERSION(2,54,0)", "#if GLIB_CHECK_VERSION(2,54,0)")
         meson.build()
+
+        with tools.environment_append(VisualStudioBuildEnvironment(self).vars) if self._is_msvc else tools.no_op():
+            meson = self._configure_meson()
+            meson.build()
+
+    def _fix_library_names(self, path):
+        # regression in 1.16
+        if self.settings.compiler == "Visual Studio":
+            with tools.chdir(path):
+                for filename_old in glob.glob("*.a"):
+                    filename_new = filename_old[3:-2] + ".lib"
+                    self.output.info("rename %s into %s" % (filename_old, filename_new))
+                    shutil.move(filename_old, filename_new)
+
 
     def package(self):
         self.copy(pattern="LICENSE", dst="licenses", src=self._source_subfolder)
@@ -137,3 +161,4 @@ class GStreamerConan(ConanFile):
         # elif self.settings.arch == "x86_64":
         #     self.output.info("Creating GSTREAMER_ROOT_X86_64 env var : %s" % gstreamer_root)
         #     self.env_info.GSTREAMER_ROOT_X86_64 = gstreamer_root
+
