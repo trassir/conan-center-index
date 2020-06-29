@@ -1,0 +1,4 @@
+sources:
+  "1.17.1":
+     url: https://github.com/GStreamer/gst-build/archive/1.17.1.tar.gz
+     sha256: d489363efd74edf86f09d7ad8f85344ce1ab7de119b40db3b7e9afab96bfe5bd
