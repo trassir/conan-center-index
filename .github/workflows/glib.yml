@@ -36,7 +36,7 @@ jobs:
               glib:with_pcre=False,
               glib:with_elf=False,
               glib:with_mount=False,
-              glib:with_selinux=-False
+              glib:with_selinux=False
               '
     runs-on: ${{ matrix.os }}
     steps:
