@@ -23,6 +23,7 @@ class GStreamerConan(ConanFile):
     exports_sources = ["patches/*.diff"]
 
     requires = ("glib/2.64.0@bincrafters/stable",
+                "ffmpeg/4.2.1",
                 "libdrm/2.4.100",
                 "libva/1.5.1",
                 "libffi/3.2.1@bincrafters/stable",
@@ -99,6 +100,7 @@ class GStreamerConan(ConanFile):
     def build(self):
         #self._apply_patches()
         self._copy_pkg_config("glib")
+        self._copy_pkg_config("ffmpeg")
         #with tools.environment_append(VisualStudioBuildEnvironment(self).vars) if self._is_msvc else tools.no_op():
         meson = self._configure_meson()
         tools.replace_in_file(os.path.join(self._build_subfolder, "..", self._source_subfolder, "subprojects","gstreamer", "meson.build"), "cdata.set('HAVE_UNWIND', 1)", "#cdata.set('HAVE_UNWIND', 1)")
@@ -130,7 +132,7 @@ class GStreamerConan(ConanFile):
 
     def package_info(self):
         self.cpp_info.libs = tools.collect_libs(self)
-        # self.cpp_info.includedirs = [os.path.join("include", "gstreamer-1.0")]
+        self.cpp_info.includedirs = [os.path.join("include", "gstreamer-1.0")]
 
         # gst_plugin_path = os.path.join(self.package_folder, "lib", "gstreamer-1.0")
         # if self.options.shared:
