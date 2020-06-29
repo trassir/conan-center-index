@@ -26,10 +26,8 @@ class GLibConan(ConanFile):
                        "with_selinux": True}
     _source_subfolder = "source_subfolder"
     _build_subfolder = 'build_subfolder'
-    autotools = None
     short_paths = True
     generators = "pkg_config"
-    requires = "zlib/1.2.11", "libffi/3.2.1"
 
     @property
     def _is_msvc(self):
@@ -52,21 +50,22 @@ class GLibConan(ConanFile):
         self.build_requires("meson/0.53.2")
 
     def requirements(self):
+        self.requires("zlib/1.2.11", "libffi/3.2.1")
         if self.options.with_pcre:
-            self.requires.add("pcre/8.41")
+            self.requires("pcre/8.41")
         if self.options.with_elf:
-            self.requires.add("libelf/0.8.13")
+            self.requires("libelf/0.8.13")
         if self.settings.os == "Linux":
             if self.options.with_mount:
-                self.requires.add("libmount/2.33.1")
+                self.requires("libmount/2.33.1")
             if self.options.with_selinux:
-                self.requires.add("libselinux/3.0")
+                self.requires("libselinux/3.0")
         else:
             # for Linux, gettext is provided by libc
-            self.requires.add("libgettext/0.20.1")
+            self.requires("libgettext/0.20.1")
 
         if tools.is_apple_os(self.settings.os):
-            self.requires.add("libiconv/1.16")
+            self.requires("libiconv/1.16")
 
     def source(self):
         tools.get(**self.conan_data["sources"][self.version])
