@@ -27,6 +27,7 @@ class GLibConan(ConanFile):
     _source_subfolder = "source_subfolder"
     _build_subfolder = 'build_subfolder'
     short_paths = True
+    _meson = None
     generators = "pkg_config"
 
     @property
@@ -76,18 +77,19 @@ class GLibConan(ConanFile):
             'build_tests = false')
 
     def _configure_meson(self):
-        meson = Meson(self)
-        defs = dict()
-        if tools.is_apple_os(self.settings.os):
-            defs["iconv"] = "external"  # https://gitlab.gnome.org/GNOME/glib/issues/1557
-        if self.settings.os == "Linux":
-            defs["selinux"] = "enabled" if self.options.with_selinux else "disabled"
-            defs["libmount"] = "enabled" if self.options.with_mount else "disabled"
-        defs["internal_pcre"] = not self.options.with_pcre
+        if not self._meson:
+            self._meson = Meson(self)
+            defs = dict()
+            if tools.is_apple_os(self.settings.os):
+                defs["iconv"] = "external"  # https://gitlab.gnome.org/GNOME/glib/issues/1557
+            if self.settings.os == "Linux":
+                defs["selinux"] = "enabled" if self.options.with_selinux else "disabled"
+                defs["libmount"] = "enabled" if self.options.with_mount else "disabled"
+            defs["internal_pcre"] = not self.options.with_pcre
 
-        meson.configure(source_folder=self._source_subfolder, args=['--wrap-mode=nofallback'],
-                        build_folder=self._build_subfolder, defs=defs)
-        return meson
+            self._meson.configure(source_folder=self._source_subfolder, args=['--wrap-mode=nofallback'],
+                            build_folder=self._build_subfolder, defs=defs)
+        return self._meson
 
     def build(self):
         for filename in [os.path.join(self._source_subfolder, "meson.build"),
