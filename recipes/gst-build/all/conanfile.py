@@ -22,11 +22,11 @@ class GStreamerConan(ConanFile):
     _build_subfolder = "build_subfolder"
     exports_sources = ["patches/*.diff"]
 
-    requires = ("glib/2.64.0@bincrafters/stable",
+    requires = ("glib/2.64.0",
                 # "ffmpeg/4.2.1",
                 "libdrm/2.4.100",
                 "libva/1.5.1",
-                "libffi/3.2.1@bincrafters/stable",
+                "libffi/3.2.1",
                 "mesa/19.3.1",
                 "openh264/1.7.0")
 
