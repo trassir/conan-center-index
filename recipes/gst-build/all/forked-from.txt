@@ -1,0 +1,1 @@
+https://github.com/bincrafters/conan-gstreamer/commit/cfb4e903a5bf3eda1a5ff52c94f09003e4217ad6
