@@ -17,7 +17,7 @@ class GStreamerConan(ConanFile):
         "shared": [True, False],
         "fPIC": [True, False]
     }
-    default_options = {"shared": True, "fPIC": True, "glib:with_pcre": False, "glib:with_elf": False, "glib:with_selinux": False, "glib:with_mount": False, "*:shared": True}
+    default_options = {"shared": True, "fPIC": True}
     _source_subfolder = "source_subfolder"
     _build_subfolder = "build_subfolder"
     exports_sources = ["patches/*.diff"]

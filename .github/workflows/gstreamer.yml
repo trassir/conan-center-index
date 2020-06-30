@@ -31,6 +31,12 @@ jobs:
             docker_image: 'trassiross/conan-gcc8'
             build_types: 'Release'
             archs: 'x86_64'
+            conan_options: '
+              glib:with_pcre=False,
+              glib:with_elf=False,
+              glib:with_selinux=False,
+              glib:with_mount=False
+              '
     runs-on: ${{ matrix.os }}
     steps:
       - name: Configure git
@@ -60,5 +66,6 @@ jobs:
           CONAN_VISUAL_RUNTIMES: ${{ matrix.vs_runtimes }}
           CONAN_ARCHS: ${{ matrix.archs }}
           CONAN_BUILD_TYPES: ${{ matrix.build_types }}
+          CONAN_OPTIONS: ${{ matrix.conan_options }}
           CONAN_REFERENCE: icu/${{ matrix.gstreamer_versions }}
           DEVELOPER_DIR: /Applications/Xcode_${{ matrix.xcode_version }}.app/Contents/Developer
