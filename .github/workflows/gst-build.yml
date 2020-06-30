@@ -1,28 +1,28 @@
-name: gstreamer CI
+name: gst-build CI
 
 on:
   pull_request:
     paths:
-      - 'recipes/gstreamer/all/**'
+      - 'recipes/gst-build/all/**'
       - 'build.py'
-      - '.github/workflows/gstreamer.yml'
+      - '.github/workflows/gst-build.yml'
   push:
     branches:
       - master
     paths:
-      - 'recipes/gstreamer/all/**'
+      - 'recipes/gst-build/all/**'
       - 'build.py'
-      - '.github/workflows/gstreamer.yml'
+      - '.github/workflows/gst-build.yml'
 
 env:
   CONAN_PASSWORD: ${{ secrets.BintrayApiKey }}
 
 jobs:
-  gstreamer:
+  gst-build:
     strategy:
       matrix:
         build: ['linux-gcc8']
-        gstreamer_versions: ['1.17.1']
+        gst-build_versions: ['1.17.1']
         include:
           - build: 'linux-gcc8'
             os: 'ubuntu-latest'
@@ -56,7 +56,7 @@ jobs:
           install: custom
           # TODO: replace when https://github.com/conan-io/conan-package-tools/issues/479 will be fixed upstream
           custom-package: git+https://github.com/trassir/conan-package-tools@fix-479-trassir
-          work-dir: sources/recipes/gstreamer/all
+          work-dir: sources/recipes/gst-build/all
           build-script: ../../../build.py
           compiler: ${{ matrix.compiler }}
           compiler-versions: ${{ matrix.compiler_version }}
@@ -67,5 +67,5 @@ jobs:
           CONAN_ARCHS: ${{ matrix.archs }}
           CONAN_BUILD_TYPES: ${{ matrix.build_types }}
           CONAN_OPTIONS: ${{ matrix.conan_options }}
-          CONAN_REFERENCE: icu/${{ matrix.gstreamer_versions }}
+          CONAN_REFERENCE: gst-build/${{ matrix.gst-build_versions }}
           DEVELOPER_DIR: /Applications/Xcode_${{ matrix.xcode_version }}.app/Contents/Developer
