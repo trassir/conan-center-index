@@ -49,10 +49,6 @@ class GStreamerConan(ConanFile):
 
     def build_requirements(self):
         self.build_requires("meson/0.53.2")
-    #    if not tools.which("pkg-config") or self.settings.os == "Windows":
-    #        self.build_requires("pkg-config_installer/0.29.2@bincrafters/stable")
-    #    self.build_requires("bison/3.5.3")
-    #    self.build_requires("flex/2.6.4")
 
 
     def source(self):
@@ -78,7 +74,6 @@ class GStreamerConan(ConanFile):
         defs["omx"] = "disabled"
         defs["python"] = "disabled"
         defs["gst-examples"] = "disabled"
-        #defs["libav"] = "disabled"
         meson.configure(build_folder=self._build_subfolder,
                         source_folder=self._source_subfolder,
                         defs=defs)
@@ -105,6 +100,10 @@ class GStreamerConan(ConanFile):
         meson = self._configure_meson()
         tools.replace_in_file(os.path.join(self._build_subfolder, "..", self._source_subfolder, "subprojects","gstreamer", "meson.build"), "cdata.set('HAVE_UNWIND', 1)", "#cdata.set('HAVE_UNWIND', 1)")
         tools.replace_in_file(os.path.join(self._build_subfolder, "..", self._source_subfolder, "subprojects","gst-devtools", "validate", "gst", "validate", "gst-validate-scenario.c"), "#if !GLIB_CHECK_VERSION(2,54,0)", "#if GLIB_CHECK_VERSION(2,54,0)")
+
+        # disabling FFMPEG tests
+        tools.replace_in_file(os.path.join(self._build_subfolder, "..", self._source_subfolder, "subprojects", "FFmpeg", "meson.build"), "tests = get_variable('lib@0@_tests'.format(built_lib[0]), [])", "tests = get_variable('@0@_tests'.format(built_lib[0]), [])")
+        tools.replace_in_file(os.path.join(self._build_subfolder, "..", self._source_subfolder, "subprojects", "FFmpeg", "meson.build"), "optional_tests = get_variable('lib@0@_optional_tests'.format(built_lib[0]), {})", "optional_tests = get_variable('@0@_optional_tests'.format(built_lib[0]), {})")
         meson.build()
 
         with tools.environment_append(VisualStudioBuildEnvironment(self).vars) if self._is_msvc else tools.no_op():
@@ -127,40 +126,8 @@ class GStreamerConan(ConanFile):
             meson = self._configure_meson()
             meson.install()
 
-        # self._fix_library_names(os.path.join(self.package_folder, "lib"))
-        # self._fix_library_names(os.path.join(self.package_folder, "lib", "gstreamer-1.0"))
-
     def package_info(self):
         self.cpp_info.libs = tools.collect_libs(self)
         self.cpp_info.includedirs = [os.path.join("include", "gstreamer-1.0")]
 
-        # gst_plugin_path = os.path.join(self.package_folder, "lib", "gstreamer-1.0")
-        # if self.options.shared:
-        #     self.output.info("Appending GST_PLUGIN_PATH env var : %s" % gst_plugin_path)
-        #     self.env_info.GST_PLUGIN_PATH.append(gst_plugin_path)
-        # else:
-        #     self.cpp_info.libdirs.append(gst_plugin_path)
-        #     self.cpp_info.libs.extend(["gstcoreelements",
-        #                                "gstcoretracers"])
-        # self.cpp_info.libs.extend(["gstreamer-1.0", "gstbase-1.0", "gstcontroller-1.0", "gstnet-1.0"])
-
-        # if self.settings.os == "Linux":
-        #     self.cpp_info.libs.append("dl")
-        # elif self.settings.os == "Windows":
-        #     self.cpp_info.libs.append("ws2_32")
-        # if not self.options.shared:
-        #     self.cpp_info.defines.append("GST_STATIC_COMPILATION")
-        # gstreamer_root = self.package_folder
-        # self.output.info("Creating GSTREAMER_ROOT env var : %s" % gstreamer_root)
-        # self.env_info.GSTREAMER_ROOT = gstreamer_root
-        # gst_plugin_scanner = "gst-plugin-scanner.exe" if self.settings.os == "Windows" else "gst-plugin-scanner"
-        # gst_plugin_scanner = os.path.join(self.package_folder, "bin", "gstreamer-1.0", gst_plugin_scanner)
-        # self.output.info("Creating GST_PLUGIN_SCANNER env var : %s" % gst_plugin_scanner)
-        # self.env_info.GST_PLUGIN_SCANNER = gst_plugin_scanner
-        # if self.settings.arch == "x86":
-        #     self.output.info("Creating GSTREAMER_ROOT_X86 env var : %s" % gstreamer_root)
-        #     self.env_info.GSTREAMER_ROOT_X86 = gstreamer_root
-        # elif self.settings.arch == "x86_64":
-        #     self.output.info("Creating GSTREAMER_ROOT_X86_64 env var : %s" % gstreamer_root)
-        #     self.env_info.GSTREAMER_ROOT_X86_64 = gstreamer_root
 
