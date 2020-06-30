@@ -23,7 +23,7 @@ class GStreamerConan(ConanFile):
     exports_sources = ["patches/*.diff"]
 
     requires = ("glib/2.64.0@bincrafters/stable",
-                "ffmpeg/4.2.1",
+                # "ffmpeg/4.2.1",
                 "libdrm/2.4.100",
                 "libva/1.5.1",
                 "libffi/3.2.1@bincrafters/stable",
@@ -31,9 +31,6 @@ class GStreamerConan(ConanFile):
                 "openh264/1.7.0")
 
     generators = "pkg_config"
-
-    def build_requirements(self):
-        self.build_requires("meson/0.53.2")
 
     @property
     def _is_msvc(self):
@@ -50,15 +47,9 @@ class GStreamerConan(ConanFile):
     def build_requirements(self):
         self.build_requires("meson/0.53.2")
 
-
     def source(self):
         tools.get(**self.conan_data["sources"][self.version])
         os.rename("%s-%s" % (self.name, self.version), self._source_subfolder)
-
-    def _apply_patches(self):
-        for filename in sorted(glob.glob("patches/*.diff")):
-            self.output.info('applying patch "%s"' % filename)
-            tools.patch(base_path=self._source_subfolder, patch_file=filename)
 
     def _configure_meson(self):
         meson = Meson(self)
@@ -74,6 +65,7 @@ class GStreamerConan(ConanFile):
         defs["omx"] = "disabled"
         defs["python"] = "disabled"
         defs["gst-examples"] = "disabled"
+
         meson.configure(build_folder=self._build_subfolder,
                         source_folder=self._source_subfolder,
                         defs=defs)
@@ -93,11 +85,10 @@ class GStreamerConan(ConanFile):
             tools.replace_prefix_in_pc_file(new_pc, prefix)
 
     def build(self):
-        #self._apply_patches()
         self._copy_pkg_config("glib")
-        self._copy_pkg_config("ffmpeg")
-        #with tools.environment_append(VisualStudioBuildEnvironment(self).vars) if self._is_msvc else tools.no_op():
-        meson = self._configure_meson()
+        # self._copy_pkg_config("ffmpeg")
+        with tools.environment_append(VisualStudioBuildEnvironment(self).vars) if self._is_msvc else tools.no_op():
+            meson = self._configure_meson()
         tools.replace_in_file(os.path.join(self._build_subfolder, "..", self._source_subfolder, "subprojects","gstreamer", "meson.build"), "cdata.set('HAVE_UNWIND', 1)", "#cdata.set('HAVE_UNWIND', 1)")
         tools.replace_in_file(os.path.join(self._build_subfolder, "..", self._source_subfolder, "subprojects","gst-devtools", "validate", "gst", "validate", "gst-validate-scenario.c"), "#if !GLIB_CHECK_VERSION(2,54,0)", "#if GLIB_CHECK_VERSION(2,54,0)")
 
