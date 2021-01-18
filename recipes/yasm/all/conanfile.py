@@ -42,15 +42,15 @@ class YASMInstallerConan(ConanFile):
                 if self.settings.arch_build == "x86":
                     msbuild.build_env.link_flags.append('/MACHINE:X86')
                 elif self.settings.arch_build == "x86_64":
-                    msbuild.build_env.link_flags.append('/SAFESEH:NO /MACHINE:X64')
-                    files = ["genmacro\\genmacro.vcxproj",
-                             "genmodule\\genmodule.vcxproj",
-                             "genperf\\genperf.vcxproj",
-                             "genstring\\genstring.vcxproj",
-                             "genversion\\genversion.vcxproj",
-                             "re2c\\re2c.vcxproj"]
-                    for file in files:
-                        tools.replace_in_file(file, "MachineX86", "MachineX64")
+                    msbuild.build_env.link_flags.append('/SAFESEH:NO')# /MACHINE:X64')
+                    # files = ["genmacro\\genmacro.vcxproj",
+                    #          "genmodule\\genmodule.vcxproj",
+                    #          "genperf\\genperf.vcxproj",
+                    #          "genstring\\genstring.vcxproj",
+                    #          "genversion\\genversion.vcxproj",
+                    #          "re2c\\re2c.vcxproj"]
+                    # for file in files:
+                    #     tools.replace_in_file(file, "MachineX86", "MachineX64")
                 msbuild.build(project_file="yasm.sln", arch=str(self.settings.arch_build), build_type="Release",
                               targets=["yasm"], platforms={"x86": "Win32"}, force_vcvars=True)
 
