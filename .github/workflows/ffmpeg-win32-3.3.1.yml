@@ -1,0 +1,83 @@
+name: ffmpeg-3.3.1 CI
+
+on:
+  pull_request:
+    paths:
+      - 'recipes/ffmpeg/3.3.1/**'
+      - 'recipes/intel_media_sdk/2018R2_1/**'
+      - 'build.py'
+      - '.github/workflows/ffmpeg-3.3.1.yml'
+  push:
+    branches:
+      - master
+    paths:
+      - 'recipes/ffmpeg/3.3.1/**'
+      - 'recipes/intel_media_sdk/2018R2_1/**'
+      - 'build.py'
+      - '.github/workflows/ffmpeg-3.3.1.yml'
+
+env:
+  CONAN_PASSWORD: ${{ secrets.BintrayApiKey }}
+  CONAN_ARCHS: 'X86'
+  IS_PURE_C: true
+  BUILD_COMPILER: 'vc'
+  BUILD_COMPILER_VERSION: '16'
+
+jobs:
+  ffmpeg:
+    strategy:
+      matrix:
+        build: ['windows-2019-release', 'windows-2019-debug']
+        include:
+          - build: 'windows-2019-release'
+            build_types: 'Release'
+            vs_runtimes: 'MD,MT'
+          - build: 'windows-2019-debug'
+            build_types: 'Debug'
+            vs_runtimes: 'MDd,MTd'
+    runs-on: 'windows-2019'
+    steps:
+      - name: Install pkg-config
+        if: matrix.os == 'macos-10.15'
+        run: brew install pkg-config
+      - name: Configure git
+        run: git config --global core.autocrlf input
+        shell: bash
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          path: sources
+      - name: Setup Python
+        uses: actions/setup-python@v1
+        with:
+          python-version: '3.x'
+      - name: intel_media_sdk - Build libmfx and Optionally Upload
+        # looks like we need to install SDK on the PC
+        # we also need to upload libraries as we will need DLLs
+        uses: trassir/run-cpt@v0.2.2-trassir
+          with:
+            install: custom
+            # TODO: replace when https://github.com/conan-io/conan-package-tools/issues/479 will be fixed upstream
+            custom-package: git+https://github.com/trassir/conan-package-tools@fix-479-trassir
+            work-dir: sources/recipes/intel_media_sdk/2018R2_1
+            build-script: ../../../build.py
+            compiler: ${{ BUILD_COMPILER }}
+            compiler-versions: ${{ BUILD_COMPILER_VERSION }}
+          env:
+            CONAN_VISUAL_RUNTIMES: ${{ matrix.vs_runtimes }}
+            CONAN_BUILD_TYPES: ${{ matrix.build_types }}
+            CONAN_REFERENCE: 'intel_media_sdk/2018R2_1'
+      - name: ffmpeg - Build and Optionally Upload
+        uses: trassir/run-cpt@v0.2.2-trassir
+        with:
+          install: custom
+          # TODO: replace when https://github.com/conan-io/conan-package-tools/issues/479 will be fixed upstream
+          custom-package: git+https://github.com/trassir/conan-package-tools@fix-479-trassir
+          work-dir: sources/recipes/ffmpeg/3.3.1
+          build-script: ../../../build.py
+          compiler: ${{ BUILD_COMPILER }}
+          compiler-versions: ${{ BUILD_COMPILER_VERSION }}
+        env:
+          CONAN_VISUAL_RUNTIMES: ${{ matrix.vs_runtimes }}
+          CONAN_BUILD_TYPES: ${{ matrix.build_types }}
+          CONAN_REFERENCE: 'ffmpeg/3.3.1'
