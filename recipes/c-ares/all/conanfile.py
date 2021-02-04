@@ -56,3 +56,4 @@ class CAresConan(ConanFile):
         if self.settings.os == "Windows":
             self.cpp_info.libs.append("ws2_32")
         self.cpp_info.names['pkg_config'] = 'libcares'
+
