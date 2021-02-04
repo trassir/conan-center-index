@@ -6,9 +6,9 @@ from conans.client.conan_api import Conan
 
 def prepare_environment():
     # fork main repo and set these variables to have own repo for development
-    custom_remotes = "REMOTES_STAGING" in environ and \
-                    "REMOTES_MASTER" in environ and \
-                    "REMOTES_UPLOAD_USER" in environ
+    custom_remotes = "REMOTES_STAGING" in environ and environ["REMOTES_STAGING"] and \
+                    "REMOTES_MASTER" in environ and environ["REMOTES_MASTER"] and \
+                    "REMOTES_UPLOAD_USER" in environ and environ["REMOTES_UPLOAD_USER"]
 
     # these interfere with conan commands
     if "CONAN_USERNAME" in environ:
@@ -41,12 +41,11 @@ def prepare_environment():
     else:
         upload_remote = "trassir-staging"
 
-    if custom_remotes:
-        if "CONAN_PASSWORD" in environ:
+    if "CONAN_PASSWORD" in environ:
+        if custom_remotes:
             conan.user(["--password", environ["CONAN_PASSWORD"],
                         "--remote", upload_remote, environ["REMOTES_UPLOAD_USER"]])
-    else:
-        if "CONAN_PASSWORD" in environ:
+        else:
             conan.user(["--password", environ["CONAN_PASSWORD"],
                         "--remote", upload_remote, "trassir-ci-bot"])
 

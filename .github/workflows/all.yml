@@ -15,7 +15,7 @@ on:
       - '.github/workflows/all.yml'
 
 env:
-  CONAN_PASSWORD: ${{ secrets.BintrayApiKey }}
+  CONAN_PASSWORD: ${{ secrets.CONAN_PASSWORD }}
   REMOTES_MASTER: ${{ secrets.REMOTES_MASTER }}
   REMOTES_STAGING: ${{ secrets.REMOTES_STAGING }}
   REMOTES_UPLOAD_USER: ${{ secrets.REMOTES_UPLOAD_USER }}
