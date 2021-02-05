@@ -15,7 +15,7 @@ on:
       - '.github/workflows/all.yml'
 
 env:
-  CONAN_PASSWORD: ${{ secrets.BintrayApiKey }}
+  CONAN_PASSWORD: ${{ secrets.CONAN_PASSWORD }}
   REMOTES_MASTER: ${{ secrets.REMOTES_MASTER }}
   REMOTES_STAGING: ${{ secrets.REMOTES_STAGING }}
   REMOTES_UPLOAD_USER: ${{ secrets.REMOTES_UPLOAD_USER }}
@@ -32,18 +32,14 @@ jobs:
             archs: 'x86_64'
             compiler: 'gcc'
             compiler_version: '8'
-            build_types: 'Release'
-            conan_txt: 'conanfile-lnvr.txt'
-            conan_profile: 'conanprofile.lnvr'
+            conanpath: 'trassir/lnvr'
             docker_image: 'trassiross/conan-gcc8'
           - build: 'macos'
             os: 'macos-10.15'
             archs: 'x86_64'
             compiler: 'apple_clang'
             compiler_version: '11.0'
-            build_types: 'Release'
-            conan_txt: 'conanfile-osx.txt'
-            conan_profile: 'conanprofile.osx'
+            conanpath: 'trassir/mac'
             deployment-target: '10.14'
             xcode_version: '11.4'
     runs-on: ${{ matrix.os }}
@@ -71,10 +67,9 @@ jobs:
           compiler-versions: ${{ matrix.compiler_version }}
           docker-images: ${{ matrix.docker_image }}
         env:
-          CONAN_TXT: ${{ matrix.conan_txt }}
-          CONAN_PROFILE: ${{ matrix.conan_profile }}
+          CONAN_TXT: ${{ matrix.conanpath }}/conanfile.txt
+          CONAN_PROFILE: ${{ matrix.conanpath }}/conanprofile
           MACOSX_DEPLOYMENT_TARGET: ${{ matrix.deployment-target }}
           CONAN_VISUAL_RUNTIMES: ${{ matrix.vs_runtimes }}
           CONAN_ARCHS: ${{ matrix.archs }}
-          CONAN_BUILD_TYPES: ${{ matrix.build_types }}
           DEVELOPER_DIR: /Applications/Xcode_${{ matrix.xcode_version }}.app/Contents/Developer
