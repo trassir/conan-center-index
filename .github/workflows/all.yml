@@ -33,6 +33,7 @@ jobs:
             compiler: 'gcc'
             compiler_version: '8'
             conanpath: 'trassir/lnvr'
+            build_types: 'Release,Debug'
             docker_image: 'trassiross/conan-gcc8'
           - build: 'macos'
             os: 'macos-10.15'
@@ -40,6 +41,7 @@ jobs:
             compiler: 'apple_clang'
             compiler_version: '11.0'
             conanpath: 'trassir/mac'
+            build_types: 'Release'
             deployment-target: '10.14'
             xcode_version: '11.4'
     runs-on: ${{ matrix.os }}
@@ -69,6 +71,7 @@ jobs:
         env:
           CONAN_TXT: ${{ matrix.conanpath }}/conanfile.txt
           CONAN_PROFILE: ${{ matrix.conanpath }}/conanprofile
+          CONAN_BUILD_TYPES: ${{ matrix.build_types }}
           MACOSX_DEPLOYMENT_TARGET: ${{ matrix.deployment-target }}
           CONAN_VISUAL_RUNTIMES: ${{ matrix.vs_runtimes }}
           CONAN_ARCHS: ${{ matrix.archs }}
