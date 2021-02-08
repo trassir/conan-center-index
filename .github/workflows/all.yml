@@ -4,14 +4,16 @@ on:
   pull_request:
     paths:
       - 'recipes/**'
-      - 'build.py'
+      - 'trassir/**'
+      - '*.py'
       - '.github/workflows/all.yml'
   push:
     branches:
       - master
     paths:
       - 'recipes/**'
-      - 'build.py'
+      - 'trassir/**'
+      - '*.py'
       - '.github/workflows/all.yml'
 
 env:
@@ -22,25 +24,57 @@ env:
   IS_PURE_C: true
 
 jobs:
-  ci:
+  conan:
     strategy:
       matrix:
-        build: ['linux-gcc8', 'macos']
+        build: ['windows-2019-release',
+                'windows-2019-debug',
+                'linux-gcc8-release',
+                'linux-gcc8-debug',
+                'macos-release'
+                ]
         include:
-          - build: 'linux-gcc8'
+          - build: 'windows-2019-release'
+            os: 'windows-2019'
+            compiler: 'vs'
+            compiler_version: '16'
+            vs_runtimes: 'MD,MT'
+            conan_txt: 'trassir/win32-vc16/conanfile.txt'
+            conan_profile: 'trassir/win32-vc16/conanprofile.release'
+            build_types: 'Release'
+          - build: 'windows-2019-debug'
+            os: 'windows-2019'
+            compiler: 'vs'
+            compiler_version: '16'
+            vs_runtimes: 'MD,MT'
+            conan_txt: 'trassir/win32-vc16/conanfile.txt'
+            conan_profile: 'trassir/win32-vc16/conanprofile.debug'
+            build_types: 'Debug'
+          - build: 'linux-gcc8-release'
             os: 'ubuntu-latest'
             archs: 'x86_64'
             compiler: 'gcc'
             compiler_version: '8'
-            conanpath: 'trassir/lnvr'
-            build_types: 'Release,Debug'
+            conan_txt: 'trassir/lnvr-gcc4.8/conanfile.txt'
+            conan_profile: 'trassir/lnvr-gcc4.8/conanprofile'
+            build_types: 'Release'
             docker_image: 'trassiross/conan-gcc8'
-          - build: 'macos'
+          - build: 'linux-gcc8-debug'
+            os: 'ubuntu-latest'
+            archs: 'x86_64'
+            compiler: 'gcc'
+            compiler_version: '8'
+            conan_txt: 'trassir/lnvr-gcc4.8/conanfile.txt'
+            conan_profile: 'trassir/lnvr-gcc4.8/conanprofile'
+            build_types: 'Debug'
+            docker_image: 'trassiross/conan-gcc8'
+          - build: 'macos-release'
             os: 'macos-10.15'
             archs: 'x86_64'
             compiler: 'apple_clang'
             compiler_version: '11.0'
-            conanpath: 'trassir/mac'
+            conan_txt: 'trassir/mac-clang11/conanfile.txt'
+            conan_profile: 'trassir/mac-clang11/conanprofile.release'
             build_types: 'Release'
             deployment-target: '10.14'
             xcode_version: '11.4'
@@ -69,8 +103,8 @@ jobs:
           compiler-versions: ${{ matrix.compiler_version }}
           docker-images: ${{ matrix.docker_image }}
         env:
-          CONAN_TXT: ${{ matrix.conanpath }}/conanfile.txt
-          CONAN_PROFILE: ${{ matrix.conanpath }}/conanprofile
+          CONAN_TXT: ${{ matrix.conan_txt }}
+          CONAN_PROFILE: ${{ matrix.conan_profile }}
           CONAN_BUILD_TYPES: ${{ matrix.build_types }}
           MACOSX_DEPLOYMENT_TARGET: ${{ matrix.deployment-target }}
           CONAN_VISUAL_RUNTIMES: ${{ matrix.vs_runtimes }}

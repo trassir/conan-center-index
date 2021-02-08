@@ -55,7 +55,10 @@ if __name__ == "__main__":
     conan, upload_remote = prepare_environment()
 
     conanfile_txt_master = collect_dependencies("master")
-    conanfile_txt_head = collect_dependencies(environ.get("GITHUB_HEAD_REF"))
+    if "GITHUB_HEAD_REF" in environ and environ["GITHUB_HEAD_REF"] != '':
+        conanfile_txt_head = collect_dependencies(environ["GITHUB_HEAD_REF"])
+    else:
+        conanfile_txt_head = conanfile_txt_master
 
     print_section("Ensure recipe changes accompanied with version bump")
     detect_updated_packages(conanfile_txt_master, conanfile_txt_head)
