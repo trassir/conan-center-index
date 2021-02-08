@@ -1,225 +1,255 @@
-extern "C"
-{
+extern "C" {
+
 #include <libavcodec/avcodec.h>
-#include <libavformat/avformat.h>
 #include <libavfilter/avfilter.h>
-#include <libavdevice/avdevice.h>
-#include <libswresample/swresample.h>
-#include <libswscale/swscale.h>
-#include <libavutil/hwcontext.h>
-#ifdef WITH_POSTPROC
-#include <libpostproc/postprocess.h>
-#endif
+#include <libavformat/avformat.h>
+
 }
 
-#include <stdexcept>
-#include <string>
-#include <sstream>
 #include <iostream>
-#include <cstdlib>
+#include <set>
+#include <string>
+#include <vector>
 
-static void throw_exception(const char * message, const char * name)
-{
-    std::stringstream s;
-    s << message << " - " << name;
-    throw std::runtime_error(s.str().c_str());
+#include <gtest/gtest.h>
+
+
+template<class Container>
+void print_all(const std::string& message, const Container& values) {
+  if (values.empty()) {
+    return;
+  }
+  std::cout << message << ":\n";
+  for (const auto& value : values) {
+    std::cout << "\t" << value << "\n";
+  }
 }
 
-static void check_decoder(const char * name)
-{
-    std::cout << "checking for decoder " << name << " ... ";
-    if (!avcodec_find_decoder_by_name(name))
-        throw_exception("decoder wasn't found", name);
-    std::cout << "OK!" << std::endl;
-}
+bool check(const std::vector<std::string>& to_check,
+    const std::set<std::string>& available,
+    const char* type,
+    const char* subtype = nullptr) {
+  std::vector<std::string> found;
+  std::vector<std::string> not_found;
 
-static void check_encoder(const char * name)
-{
-    std::cout << "checking for encoder " << name << " ... ";
-    if (!avcodec_find_encoder_by_name(name))
-        throw_exception("encoder wasn't found", name);
-    std::cout << "OK!" << std::endl;
-}
-
-static void check_filter(const char * name)
-{
-    std::cout << "checking for filter " << name << " ... ";
-    if (!avfilter_get_by_name(name))
-        throw_exception("filter wasn't found", name);
-    std::cout << "OK!" << std::endl;
-}
-
-static void check_input_device(const char * name)
-{
-    std::cout << "checking for input device " << name << " ... ";
-
-    AVInputFormat * format = NULL;
-    bool found = false;
-
-    while ((format = av_iformat_next(format))) {
-        if (0 == strcmp(name, format->name)) {
-            found = true;
-            break;
-        }
+  for (const auto& name : to_check) {
+    if (available.count(name)) {
+      found.push_back(name);
+    } else {
+      not_found.push_back(name);
     }
-    if (!found)
-        throw_exception("output input wasn't found", name);
+  }
 
-    std::cout << "OK!" << std::endl;
+  std::cout << "checking " << type;
+  if (subtype) {
+    std::cout << "(" << subtype << ")";
+  }
+  std::cout << "...\n";
+  print_all("Suppoted", found);
+  print_all("Not supported", not_found);
+
+  std::cout.flush();
+
+  return not_found.empty();
 }
 
-static void check_output_device(const char * name)
-{
-    std::cout << "checking for output device " << name << " ... ";
-
-    AVOutputFormat * format = NULL;
-    bool found = false;
-
-    while ((format = av_oformat_next(format))) {
-        if (0 == strcmp(name, format->name)) {
-            found = true;
-            break;
-        }
-    }
-    if (!found)
-        throw_exception("output device wasn't found", name);
-
-    std::cout << "OK!" << std::endl;
+std::set<std::string> get_input_formats_and_devices() {
+  std::set<std::string> names;
+  AVInputFormat* format = nullptr;
+  while ((format = av_iformat_next(format))) {
+    names.insert(format->name);
+  }
+  return names;
 }
 
-static void check_protocol(const char * name)
-{
-    std::cout << "checking for protocol " << name << " ... ";
-
-    bool found = false;
-
-    const char * protocol = NULL;
-    void* dontcare = NULL;
-
-    while ((protocol = avio_enum_protocols(&dontcare, 0))) {
-        if (0 == strcmp(name, protocol)) {
-            found = true;
-            break;
-        }
-    }
-
-    if (found) {
-        std::cout << "OK!" << std::endl;
-        return;
-    }
-
-    while ((protocol = avio_enum_protocols(&dontcare, 1))) {
-        if (0 == strcmp(name, protocol)) {
-            found = true;
-            break;
-        }
-    }
-
-    if (!found)
-        throw_exception("protocol wasn't found", name);
-    std::cout << "OK!" << std::endl;
+std::set<std::string> get_output_formats_and_devices() {
+  std::set<std::string> names;
+  AVOutputFormat* format = nullptr;
+  while ((format = av_oformat_next(format))) {
+    names.insert(format->name);
+  }
+  return names;
 }
 
-int main() try
-{
-    avcodec_register_all();
-    av_register_all();
-    avfilter_register_all();
-    avdevice_register_all();
-    swresample_version();
-    swscale_version();
-#ifdef WITH_POSTPROC
-    postproc_version();
+bool check_bitstream_filters(const std::vector<std::string>& filters_to_check) {
+  std::set<std::string> available_filters;
+  void* state = nullptr;
+  const AVBitStreamFilter* filter = nullptr;
+  while ((filter = av_bsf_next(&state))) {
+    available_filters.insert(filter->name);
+  }
+  return check(filters_to_check, available_filters, "bitstream_filters");
+}
+
+bool check_filters(const std::vector<std::string>& filters_to_check) {
+  std::set<std::string> available_filters;
+  const AVFilter* filter = nullptr;
+  while ((filter = avfilter_next(filter))) {
+    available_filters.insert(filter->name);
+  }
+  return check(filters_to_check, available_filters, "filters");
+}
+
+bool check_input_formats(const std::vector<std::string>& formats_to_check,
+    const std::set<std::string>& available_formats) {
+  return check(formats_to_check, available_formats, "formats", "input");
+}
+
+bool check_output_formats(const std::vector<std::string>& formats_to_check,
+    const std::set<std::string>& available_formats) {
+  return check(formats_to_check, available_formats, "formats", "output");
+}
+
+bool check_input_devices(const std::vector<std::string>& devices_to_check,
+    const std::set<std::string>& available_devices) {
+  return check(devices_to_check, available_devices, "devices", "input");
+}
+
+bool check_output_devices(const std::vector<std::string>& devices_to_check,
+    const std::set<std::string>& available_devices) {
+  return check(devices_to_check, available_devices, "devices", "output");
+}
+
+
+bool check_encoders(const std::vector<std::string>& encoders_to_check) {
+  std::set<std::string> available;
+  for (const auto& name: encoders_to_check) {
+    if (avcodec_find_encoder_by_name(name.c_str())) {
+      available.insert(name);
+    }
+  }
+  return check(encoders_to_check, available, "codecs", "encoders");
+}
+
+bool check_decoders(const std::vector<std::string>& decoders_to_check) {
+  std::set<std::string> available;
+  for (const auto& name: decoders_to_check) {
+    if (avcodec_find_decoder_by_name(name.c_str())) {
+      available.insert(name);
+    }
+  }
+  return check(decoders_to_check, available, "codecs", "decoders");
+}
+
+const std::vector<std::string> input_and_output_formats = {
+"aac",  // no output
+"ac3",
+"avi",
+"flac",
+"flv",
+"h263",
+"h264",
+"hevc",
+"hls",  // no input
+"mjpeg",
+"mp3",
+"mpeg",
+"mxg",  // no output
+"ogg",
+"rtp",
+"rtsp"};
+
+const std::vector<std::string> video_encoders = {
+"dvvideo",
+"mjpeg",
+"mpeg1video",
+"mpeg2video",
+"mpeg4",
+"flv",
+"h261",
+"h263",
+"theora",
+"vp8",
+"msmpeg4v2",
+"wmv1",
+"wmv2"};
+
+const std::vector<std::string> video_decoders = {
+"dvvideo",
+"mjpeg",
+"mpeg1video",
+"mpeg2video",
+"mpeg4",
+"mpeg4dd",
+"mjpegdd",
+"mpeg4di",
+"mjpegdi",
+"flv",
+"h261",
+"h263",
+"h264",
+"h265",
+"hevc",
+"theora",
+"vp8",
+"msmpeg4v1",
+"msmpeg4v2",
+"wmv1",
+"wmv2"};
+
+
+const std::vector<std::string> input_devices = {
+"dv1394",
+"jack",
+"lavfi",
+"libcdio",
+"openal",
+"oss",
+#ifdef __linux__
+"alsa",
+"fbdev",
+"pulse",
+"video4linux2",
+"v4l2",
+"x11grab"
 #endif
-#ifdef WITH_OPENJPEG
-    check_decoder("libopenjpeg");
-    check_encoder("libopenjpeg");
+};
+
+
+const std::vector<std::string> output_devices = {
+"dv1394",
+"opengl",
+"oss",
+"sdl",
+#ifdef __linux__
+"alsa",
+"fbdev",
+"pulse",
+"v4l2",
+"xv"
 #endif
-#ifdef WITH_OPENH264
-    check_encoder("libopenh264");
-#endif
-#ifdef WITH_FREETYPE
-    check_filter("drawtext");
-#endif
-#ifdef WITH_VORBIS
-    check_decoder("libvorbis");
-    check_encoder("libvorbis");
-#endif
-#ifdef WITH_XCB
-    check_input_device("x11grab");
-#endif
-#if defined(WITH_APPKIT) && defined(WITH_COREIMAGE)
-    check_filter("coreimage");
-#endif
-#ifdef WITH_AVFOUNDATION
-    check_input_device("avfoundation");
-#endif
-#ifdef WITH_AUDIOTOOLBOX
-    check_decoder("aac_at");
-#endif
-#ifdef WITH_SECURETRANSPORT
-    check_protocol("tls");
-#endif
-#ifdef WITH_OPENSSL
-    check_protocol("tls");
-#endif
-#ifdef WITH_OPUS
-    check_decoder("libopus");
-    check_encoder("libopus");
-#endif
-#ifdef WITH_ZMQ
-    check_filter("zmq");
-#endif
-#ifdef WITH_ALSA
-    check_input_device("alsa");
-    check_output_device("alsa");
-#endif
-#ifdef WITH_PULSE
-    check_input_device("pulse");
-    check_output_device("pulse");
-#endif
-#ifdef WITH_SDL2
-    check_output_device("sdl,sdl2");
-#endif
-#ifdef WITH_X264
-    check_encoder("libx264");
-#endif
-#ifdef WITH_X265
-    check_encoder("libx265");
-#endif
-#ifdef WITH_VPX
-    check_decoder("libvpx");
-    check_decoder("libvpx-vp9");
-    check_encoder("libvpx");
-    check_encoder("libvpx-vp9");
-#endif
-#ifdef WITH_MP3LAME
-    check_encoder("libmp3lame");
-#endif
-#ifdef WITH_FDK_AAC
-    check_decoder("libfdk_aac");
-    check_encoder("libfdk_aac");
-#endif
-#ifdef WITH_QSV
-    check_decoder("mpeg2_qsv");
-    check_decoder("h264_qsv");
-    check_decoder("hevc_qsv");
-    check_decoder("vc1_qsv");
-    check_decoder("vp8_qsv");
-    check_encoder("mpeg2_qsv");
-    check_encoder("h264_qsv");
-    check_encoder("hevc_qsv");
-    check_filter("deinterlace_qsv");
-    check_filter("scale_qsv");
-#endif
-#ifdef WITH_WEBP
-    check_encoder("libwebp");
-    check_encoder("libwebp_anim");
-#endif
-    return EXIT_SUCCESS;
-} catch (std::runtime_error & e)
-{
-    std::cout << "FAIL!" << std::endl;
-    std::cerr << e.what() << std::endl;
-    return EXIT_FAILURE;
+};
+
+const std::vector<std::string> filters = {
+"buffer",
+"buffersink"
+};
+
+const std::vector<std::string> bitstream_filters = {
+"h264_mp4toannexb",
+"hevc_mp4toannexb"
+};
+
+
+TEST(FFMPEG, FORMATS) {
+  avcodec_register_all();
+  av_register_all();
+  avfilter_register_all();
+
+  const auto& available_input = get_input_formats_and_devices();
+  const auto& available_output = get_output_formats_and_devices();
+
+  const bool input_format_ok = check_input_formats(input_and_output_formats, available_input);
+  const bool output_format_ok = check_output_formats(input_and_output_formats, available_output);
+
+  const bool input_device_ok = check_input_devices(input_devices, available_input);
+  const bool output_device_ok = check_output_devices(output_devices, available_output);
+
+  const bool video_encoders_ok = check_encoders(video_encoders);
+  const bool video_decoders_ok = check_decoders(video_decoders);
+
+  const bool filters_ok = check_filters(filters);
+  const bool bitstream_filters_ok = check_bitstream_filters(bitstream_filters);
+
+  return 0;
 }
