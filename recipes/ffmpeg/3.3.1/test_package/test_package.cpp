@@ -11,8 +11,6 @@ extern "C" {
 #include <string>
 #include <vector>
 
-#include <gtest/gtest.h>
-
 
 template<class Container>
 void print_all(const std::string& message, const Container& values) {
@@ -231,7 +229,7 @@ const std::vector<std::string> bitstream_filters = {
 };
 
 
-TEST(FFMPEG, FORMATS) {
+int main() {
   avcodec_register_all();
   av_register_all();
   avfilter_register_all();
