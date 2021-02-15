@@ -21,8 +21,6 @@ def prepare_environment():
     # TODO: delete this after https://github.com/trassir/conan-config/pull/11
     conan_run(['remote', 'remove', 'bintray-trassir'])
 
-    conan_run(['remote', 'list'])
-
     if custom_remotes:
         # allow download from official repos
         conan_run(['remote', 'add', 'org-trassir-staging', 'https://api.bintray.com/conan/trassir/conan-staging', 'True'])
@@ -36,10 +34,15 @@ def prepare_environment():
         conan_run(['remote', 'add', 'trassir-public', 'https://api.bintray.com/conan/trassir/conan-public', 'True'])
         conan_run(['remote', 'add', 'conan-center', 'https://conan.bintray.com', 'True'])
 
-    if environ.get('GITHUB_HEAD_REF', 'master') == 'master':
-        upload_remote = 'trassir-public'
-    else:
+    print('Remotes ready:')
+    conan_run(['remote', 'list'])
+
+    if 'GITHUB_HEAD_REF' in environ and environ['GITHUB_HEAD_REF'] != '':
+        print('Detected staging branch `{branch}`'.format(branch=environ['GITHUB_HEAD_REF']))
         upload_remote = 'trassir-staging'
+    else:
+        upload_remote = 'trassir-public'
+    print('Will upload to {remote}'.format(remote=upload_remote))
 
     if 'CONAN_PASSWORD' in environ:
         if custom_remotes:

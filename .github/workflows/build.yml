@@ -74,6 +74,7 @@ jobs:
           pip install --upgrade conan
           python sources/builder/build.py
         env:
+          PYTHONUNBUFFERED: "true"
           CONAN_TXT: ${{ matrix.conan_txt }}
           CONAN_PROFILE: ${{ matrix.conan_profile }}
           CONAN_BUILD_TYPE: ${{ matrix.build_type }}
