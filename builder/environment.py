@@ -23,8 +23,8 @@ def prepare_environment():
     # TODO: delete this after https://github.com/trassir/conan-config/pull/11
     conan_run(['remote', 'remove', 'bintray-trassir'])
 
+    trassir_org = 'https://api.bintray.com/conan/trassir/'
     if custom_remotes:
-        trassir_org = 'https://api.bintray.com/conan/trassir/'
         # allow download from official repos
         conan_run(['remote', 'add', 'org-trassir-staging',
                    trassir_org + 'conan-staging', 'True'])
