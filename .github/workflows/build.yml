@@ -5,16 +5,16 @@ on:
     paths:
       - 'recipes/**'
       - 'trassir/**'
-      - '*.py'
-      - '.github/workflows/all.yml'
+      - 'builder/**'
+      - '.github/workflows/build.yml'
   push:
     branches:
       - master
     paths:
       - 'recipes/**'
       - 'trassir/**'
-      - '*.py'
-      - '.github/workflows/all.yml'
+      - 'builder/**'
+      - '.github/workflows/build.yml'
 
 env:
   CONAN_PASSWORD: ${{ secrets.CONAN_PASSWORD }}
@@ -27,43 +27,33 @@ jobs:
   conan:
     strategy:
       matrix:
-        build: ['windows-2019-release',
+        build: ['linux-gcc8-release',
+                'windows-2019-release',
                 'windows-2019-debug',
-                'linux-gcc8-release',
-                'linux-gcc8-debug',
                 'macos-release'
                 ]
         include:
+          - build: 'linux-gcc8-release'
+            os: 'ubuntu-latest'
+            docker_image: 'trassiross/conan-gcc8'
+            conan_txt: 'trassir/lnvr-gcc8/conanfile.txt'
+            conan_profile: 'trassir/lnvr-gcc8/conanprofile'
+            build_type: 'Release'
           - build: 'windows-2019-release'
             os: 'windows-2019'
             conan_txt: 'trassir/win32-vc16/conanfile.txt'
             conan_profile: 'trassir/win32-vc16/conanprofile.release'
-            build_types: 'Release'
+            build_type: 'Release'
           - build: 'windows-2019-debug'
             os: 'windows-2019'
             conan_txt: 'trassir/win32-vc16/conanfile.txt'
             conan_profile: 'trassir/win32-vc16/conanprofile.debug'
-            build_types: 'Debug'
-          - build: 'linux-gcc8-release'
-            os: 'ubuntu-latest'
-            archs: 'x86_64'
-            conan_txt: 'trassir/lnvr-gcc8/conanfile.txt'
-            conan_profile: 'trassir/lnvr-gcc8/conanprofile'
-            build_types: 'Release'
-            docker_image: 'trassiross/conan-gcc8'
-          - build: 'linux-gcc8-debug'
-            os: 'ubuntu-latest'
-            archs: 'x86_64'
-            conan_txt: 'trassir/lnvr-gcc8/conanfile.txt'
-            conan_profile: 'trassir/lnvr-gcc8/conanprofile'
-            build_types: 'Debug'
-            docker_image: 'trassiross/conan-gcc8'
+            build_type: 'Debug'
           - build: 'macos-release'
             os: 'macos-10.15'
-            archs: 'x86_64'
             conan_txt: 'trassir/mac-clang11/conanfile.txt'
             conan_profile: 'trassir/mac-clang11/conanprofile.release'
-            build_types: 'Release'
+            build_type: 'Release'
             deployment-target: '10.14'
             xcode_version: '11.4'
     runs-on: ${{ matrix.os }}
@@ -79,19 +69,14 @@ jobs:
         uses: actions/setup-python@v1
         with:
           python-version: '3.x'
-      - name: Build and Optionally Upload
-        uses: trassir/run-cpt@v0.2.2-trassir
-        with:
-          install: custom
-          # TODO: replace when https://github.com/conan-io/conan-package-tools/issues/479 will be fixed upstream
-          custom-package: git+https://github.com/trassir/conan-package-tools@fix-479-trassir
-          work-dir: sources/
-          build-script: build.py
-          docker-images: ${{ matrix.docker_image }}
+      - name: Build and Upload
+        run: |
+          pip install --upgrade conan
+          python sources/builder/build.py
         env:
           CONAN_TXT: ${{ matrix.conan_txt }}
           CONAN_PROFILE: ${{ matrix.conan_profile }}
-          CONAN_BUILD_TYPES: ${{ matrix.build_types }}
+          CONAN_BUILD_TYPE: ${{ matrix.build_type }}
+          CONAN_DOCKER_IMAGE: ${{ matrix.docker_image }}
           MACOSX_DEPLOYMENT_TARGET: ${{ matrix.deployment-target }}
-          CONAN_ARCHS: ${{ matrix.archs }}
           DEVELOPER_DIR: /Applications/Xcode_${{ matrix.xcode_version }}.app/Contents/Developer
