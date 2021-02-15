@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 
-from os import environ, mkdir, chdir, path
+from os import environ, mkdir, path
 import subprocess
 from environment import prepare_environment
 from conan_tools import ConanfileTxt, list_installed_packages, conan_run
+from conans import tools
 
 
 def print_section(message):
@@ -15,12 +16,11 @@ def print_section(message):
 def collect_dependencies(branch_name):
     print_section('Collect packages info from branch {branch}'.format(branch=branch_name))
     mkdir(branch_name)
-    chdir(branch_name)
-    subprocess.check_call(['git', 'clone', environ['GITHUB_SERVER_URL'] + '/' + environ['GITHUB_REPOSITORY'], '.'])
-    subprocess.check_call(['git', 'checkout', branch_name])
-    subprocess.check_call(['git', 'branch'])
-    conanfile_txt = ConanfileTxt(environ['CONAN_TXT'], branch_name != 'master')
-    chdir('..')
+    with tools.chdir(branch_name):
+        subprocess.check_call(['git', 'clone', environ['GITHUB_SERVER_URL'] + '/' + environ['GITHUB_REPOSITORY'], '.'])
+        subprocess.check_call(['git', 'checkout', branch_name])
+        subprocess.check_call(['git', 'branch'])
+        conanfile_txt = ConanfileTxt(environ['CONAN_TXT'], branch_name != 'master')
     print('Collected {num} packages:'.format(num=len(conanfile_txt.packages)))
     for _, package in conanfile_txt.packages.items():
         print(package)
