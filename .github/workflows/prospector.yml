@@ -36,4 +36,4 @@ jobs:
         pip install prospector
     - name: Lint with prospector
       run: |
-        prospector -F builder
+        prospector -F --strictness veryhigh builder
