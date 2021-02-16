@@ -3,6 +3,7 @@ cmake
 virtualrunenv
 
 [requires]
+miniupnpc/2.1
 jsoncpp/1.8.3
 bzip2/1.0.8
 ffmpeg/3.3.1
