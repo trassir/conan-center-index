@@ -122,7 +122,8 @@ class ConanfileTxt():
                 for strline in txt_file.read().splitlines():
                     self.add_package(strline)
         elif conanfile_required:
-            raise RuntimeError('File {filename} does not exist')
+            raise RuntimeError('File {filename} does not exist'.format(
+                               filename=filename))
 
     def add_package(self, strline):
         if not _is_gha_buildable(strline):
