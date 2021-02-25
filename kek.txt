@@ -1,3 +1,9 @@
+commit c605ce8071dee378d01b9ee880be63513655c56b
+Author: Jenkins CI <robot@trassir.com>
+Date:   Thu Feb 25 11:15:15 2021 +0300
+
+    D1337
+
 commit ec196fadb5d7a09708000963080a5ae5539fd1c9
 Author: Jenkins CI <robot@trassir.com>
 Date:   Thu Feb 25 11:12:19 2021 +0300
@@ -29,9 +35,3 @@ Date:   Fri Feb 12 18:04:43 2021 +0300
     * Test x86 on x86_x64
     
     * Update conanfile.py
-
-commit 9773f1506e2ec3d9601edbed2629b2944bc38a37
-Author: artem-kamyshev <oemrus@yandex.ru>
-Date:   Wed Feb 3 19:01:54 2021 +0300
-
-    Fix autocrlf option for ffmpeg linux/macos github CI
