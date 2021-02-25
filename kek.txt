@@ -1,3 +1,9 @@
+commit ec196fadb5d7a09708000963080a5ae5539fd1c9
+Author: Jenkins CI <robot@trassir.com>
+Date:   Thu Feb 25 11:12:19 2021 +0300
+
+    D1337
+
 commit a32a0ace562ffc2e535f0681492985c691d68197
 Author: Vladimir Looze <woldemar@mimas.ru>
 Date:   Tue Feb 16 15:41:40 2021 +0300
@@ -29,12 +35,3 @@ Author: artem-kamyshev <oemrus@yandex.ru>
 Date:   Wed Feb 3 19:01:54 2021 +0300
 
     Fix autocrlf option for ffmpeg linux/macos github CI
-
-commit ba1252e387ca97b1b5f6b007923f1debef42456f
-Author: artem-kamyshev <oemrus@yandex.ru>
-Date:   Fri Jan 22 15:43:24 2021 +0300
-
-    T11045: minimal build of ffmpeg 3.3.1 win32 on github CI
-    
-    Start from build: ffmpeg + libmfx. After a test we will
-    see if we need any other external libraries.
