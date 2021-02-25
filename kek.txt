@@ -1,3 +1,9 @@
+commit fc9013b5f5db14c489da386eb4eefcfe02745d75
+Author: Jenkins CI <robot@trassir.com>
+Date:   Thu Feb 25 11:15:40 2021 +0300
+
+    D1337
+
 commit c605ce8071dee378d01b9ee880be63513655c56b
 Author: Jenkins CI <robot@trassir.com>
 Date:   Thu Feb 25 11:15:15 2021 +0300
@@ -21,17 +27,3 @@ Author: artem-kamyshev <oemrus@yandex.ru>
 Date:   Wed Feb 10 19:39:05 2021 +0300
 
     T12953: miniupnpc for win32, vc2019
-
-commit 6b9b479ed85490be3590e6b78450d85e6ee00605
-Author: Konstantin-Ivanov-dssl-ru <78955582+Konstantin-Ivanov-dssl-ru@users.noreply.github.com>
-Date:   Fri Feb 12 18:04:43 2021 +0300
-
-    jsoncpp/1.8.3 on Windows (#274)
-    
-    * Jsoncpp on Windows
-    
-    * CONAN_REFERENCE
-    
-    * Test x86 on x86_x64
-    
-    * Update conanfile.py
