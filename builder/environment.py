@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from os import environ
+from sys import exit
 from conan_tools import conan_run
 
 
@@ -19,6 +20,10 @@ def prepare_environment():
 
     conan_run(['config', 'install',
               'https://github.com/trassir/conan-config.git'])
+
+    # TODO: delete this after https://github.com/trassir/conan-config/pull/11
+    conan_run(['remote', 'list'])
+    exit(1)
 
     trassir_org = 'https://api.bintray.com/conan/trassir/'
     if custom_remotes:
