@@ -2,6 +2,7 @@
 
 from os import environ
 from sys import exit
+import time
 from conan_tools import conan_run
 
 
@@ -23,6 +24,7 @@ def prepare_environment():
 
     # TODO: delete this after https://github.com/trassir/conan-config/pull/11
     conan_run(['remote', 'list'])
+    time.sleep(120)
     exit(1)
 
     trassir_org = 'https://api.bintray.com/conan/trassir/'
