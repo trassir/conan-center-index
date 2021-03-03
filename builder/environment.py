@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 
 from os import environ
-from sys import exit
-import time
 from conan_tools import conan_run
 
 
