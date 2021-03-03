@@ -3,6 +3,7 @@ cmake
 virtualrunenv
 
 [requires]
+c-ares/1.15.0
 bzip2/1.0.8
 ffmpeg/3.3.1
 intel_media_sdk/2018R2_1
