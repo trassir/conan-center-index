@@ -7,6 +7,19 @@ from environment import prepare_environment
 from conan_tools import ConanfileTxt, list_installed_packages, conan_run
 
 
+def remove_artifctory_deps_from_txt(filename):
+    def wanted_line(line):
+        if 'trassir/stable' in line:
+            return False
+        return True
+    conanfile_contents = []
+    with open(filename, 'rb') as txt:
+        conanfile_contents = txt.read().splitlines()
+    conanfile_contents = list(filter(wanted_line, conanfile_contents))
+    with open(filename, 'wb') as txt:
+        txt.write('\n'.join(conanfile_contents))
+
+
 def print_section(message):
     print('=' * 80)
     print('   ' + message)
@@ -114,6 +127,10 @@ if __name__ == '__main__':
                       profile=environ['CONAN_PROFILE'],
                       build_type=environ['CONAN_BUILD_TYPE']
                   ))
+
+    # TODO: remove this once bintray and artifactory are merged
+    remove_artifctory_deps_from_txt(environ['CONAN_TXT'])
+
     conan_run(['install',
                path.join('sources', environ['CONAN_TXT']),
                '-if', 'install_dir',
