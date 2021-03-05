@@ -37,7 +37,7 @@ jobs:
             os: 'ubuntu-latest'
             docker_image: 'trassiross/conan-gcc8'
             conan_txt: 'trassir/lnvr-gcc8/conanfile.txt'
-            conan_profile: 'trassir/lnvr-gcc8/conanprofile'
+            conan_profile: 'trassir/lnvr-gcc8/conanprofile.release'
             build_type: 'Release'
           - build: 'windows-2019-release'
             os: 'windows-2019'
