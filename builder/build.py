@@ -122,11 +122,10 @@ if __name__ == '__main__':
     for _, package in conanfile_txt_head.packages.items():
         package.export()
 
-    print_section('Building packages from {txt} for {profile} - {build_type}'
+    print_section('Building packages from {txt} for {profile}'
                   .format(
                       txt=environ['CONAN_TXT'],
-                      profile=environ['CONAN_PROFILE'],
-                      build_type=environ['CONAN_BUILD_TYPE']
+                      profile=environ['CONAN_PROFILE']
                   ))
 
     # TODO: remove this once bintray and artifactory are merged
@@ -136,7 +135,6 @@ if __name__ == '__main__':
                path.join('sources', environ['CONAN_TXT']),
                '-if', 'install_dir',
                '-pr', path.join('sources', environ['CONAN_PROFILE']),
-               '-s', 'build_type={bt}'.format(bt=environ['CONAN_BUILD_TYPE']),
                '--build', 'missing'])
 
     print_section('Enumerating installed packages')
