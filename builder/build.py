@@ -129,7 +129,7 @@ if __name__ == '__main__':
                   ))
 
     # TODO: remove this once bintray and artifactory are merged
-    remove_artifctory_deps_from_txt(environ['CONAN_TXT'])
+    remove_artifctory_deps_from_txt(path.join('sources', environ['CONAN_TXT']))
 
     conan_run(['install',
                path.join('sources', environ['CONAN_TXT']),
