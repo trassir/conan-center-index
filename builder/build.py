@@ -17,7 +17,8 @@ def remove_artifctory_deps_from_txt(filename):
         conanfile_contents = txt.read().splitlines()
     conanfile_contents = list(filter(wanted_line, conanfile_contents))
     with open(filename, 'wb') as txt:
-        txt.write('\n'.join(conanfile_contents))
+        for line in conanfile_contents:
+            txt.write(line)
 
 
 def print_section(message):
