@@ -13,7 +13,7 @@ jansson/2.12@bincrafters/stable # GHA: ignore
 jsoncpp/1.8.3@trassir/stable # GHA: ignore
 libcurl/7.50.3@bincrafters/stable # GHA: ignore
 libpq/9.6.9@bincrafters/stable # GHA: ignore
-miniupnpc/2.1@rhard/testing # GHA: ignore
+miniupnpc/2.1@rhard/testing # GHA: ignore trassir/stable
 openal/1.19.0@trassir/stable # GHA: ignore
 pjsip/2.8@trassir/stable # GHA: ignore
 qt/4.8.7-bin@trassir/stable # GHA: ignore
