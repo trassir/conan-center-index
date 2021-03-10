@@ -15,10 +15,10 @@ libcurl/7.50.3@bincrafters/stable # GHA: ignore
 libpq/9.6.9@bincrafters/stable # GHA: ignore
 miniupnpc/2.1@rhard/testing # GHA: ignore
 openal/1.19.0@trassir/stable # GHA: ignore
-opencv/2.4.13.5@conan/stable # GHA: ignore
 pjsip/2.8@trassir/stable # GHA: ignore
 qt/4.8.7-bin@trassir/stable # GHA: ignore
 sip/4.19.3@trassir/stable # GHA: ignore
+opencv/2.4.13.5
 libjpeg/9d.dssl1
 
 [options]
