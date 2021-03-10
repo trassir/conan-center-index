@@ -3,23 +3,24 @@ cmake
 virtualrunenv
 
 [requires]
-OpenSSL/1.0.2l@conan/stable # GHA: ignore
-axtls/1.5.3@trassir/stable # GHA: ignore
-boost/1.64.0@conan/stable # GHA: ignore
-c-ares/1.15.0@conan/stable # GHA: ignore
-ffmpeg/3.3.1@trassir/stable # GHA: ignore
-glew/2.1.0@bincrafters/stable # GHA: ignore
-jansson/2.12@bincrafters/stable # GHA: ignore
-jsoncpp/1.8.3@trassir/stable # GHA: ignore
-libcurl/7.50.3@bincrafters/stable # GHA: ignore
-libpq/9.6.9@bincrafters/stable # GHA: ignore
+OpenSSL/1.0.2l@conan/stable # GHA: ignore trassir/stable
+axtls/1.5.3@trassir/stable # GHA: ignore trassir/stable
+boost/1.64.0@conan/stable # GHA: ignore trassir/stable
+c-ares/1.15.0@conan/stable # GHA: ignore trassir/stable
+ffmpeg/3.3.1@trassir/stable # GHA: ignore trassir/stable
+glew/2.1.0@bincrafters/stable # GHA: ignore trassir/stable
+jansson/2.12@bincrafters/stable # GHA: ignore trassir/stable
+jsoncpp/1.8.3@trassir/stable # GHA: ignore trassir/stable
+libcurl/7.50.3@bincrafters/stable # GHA: ignore trassir/stable
+libpq/9.6.9@bincrafters/stable # GHA: ignore trassir/stable
 miniupnpc/2.1@rhard/testing # GHA: ignore trassir/stable
-openal/1.19.0@trassir/stable # GHA: ignore
-pjsip/2.8@trassir/stable # GHA: ignore
-qt/4.8.7-bin@trassir/stable # GHA: ignore
-sip/4.19.3@trassir/stable # GHA: ignore
+openal/1.19.0@trassir/stable # GHA: ignore trassir/stable
+pjsip/2.8@trassir/stable # GHA: ignore trassir/stable
+qt/4.8.7-bin@trassir/stable # GHA: ignore trassir/stable
+sip/4.19.3@trassir/stable # GHA: ignore trassir/stable
 opencv/2.4.13.5
 libjpeg/9d.dssl1
+zlib/1.2.11
 
 [options]
 OpenSSL:shared=True
