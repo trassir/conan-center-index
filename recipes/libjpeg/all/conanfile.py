@@ -115,6 +115,11 @@ class LibjpegConan(ConanFile):
             tools.rmdir(os.path.join(self.package_folder, "lib", "pkgconfig"))
             tools.rmdir(os.path.join(self.package_folder, "share"))
 
+            if self.settings.os == "Macos" and self.options.shared:
+                self.run("install_name_tool -id libjpeg.9.dylib {}".format(
+                    os.path.join(self.package_folder, "lib", "libjpeg.9.dylib")
+                    ))
+
             bindir = os.path.join(self.package_folder, "bin")
             for file in os.listdir(bindir):
                 if file.endswith(".exe"):
