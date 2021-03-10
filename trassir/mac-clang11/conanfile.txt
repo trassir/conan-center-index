@@ -19,6 +19,7 @@ opencv/2.4.13.5@conan/stable # GHA: ignore
 pjsip/2.8@trassir/stable # GHA: ignore
 qt/4.8.7-bin@trassir/stable # GHA: ignore
 sip/4.19.3@trassir/stable # GHA: ignore
+libjpeg/9d.dssl1
 
 [options]
 OpenSSL:shared=True
