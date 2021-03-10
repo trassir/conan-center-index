@@ -36,7 +36,7 @@ class LibjpegConan(ConanFile):
 
     def source(self):
         tools.get(**self.conan_data["sources"][self.version])
-        os.rename("jpeg-" + self.version, self._source_subfolder)
+        os.rename(("jpeg-" + self.version).split(".dssl")[0], self._source_subfolder)
 
     def _build_nmake(self):
         shutil.copy("Win32.Mak", os.path.join(self._source_subfolder, "Win32.Mak"))
