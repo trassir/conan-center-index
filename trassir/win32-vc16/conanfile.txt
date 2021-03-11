@@ -13,9 +13,11 @@ gflags/2.2.2
 hdf5/1.10.6
 intel_media_sdk/2018R2_1
 jsoncpp/1.8.3
+libjpeg/9d
+libpng/1.6.37
+libtiff/4.0.8
 miniupnpc/2.1
 nasm/2.14
-opencv/2.4.13.5
 openh264/1.7.0
 xz_utils/5.2.4
 zlib/1.2.11
