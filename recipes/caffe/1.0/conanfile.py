@@ -45,8 +45,6 @@ class CaffeConan(ConanFile):
 
 
     def configure(self):
-        if self.settings.os == "Windows":
-            raise ConanInvalidConfiguration("This library is not compatible with Windows")
         if not self.options.with_gpu:
             del self.options.gpu_arch
 
