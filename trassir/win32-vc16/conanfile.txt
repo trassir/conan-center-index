@@ -12,6 +12,7 @@ glog/0.4.0
 gflags/2.2.2
 hdf5/1.10.6
 intel_media_sdk/2018R2_1
+jbig/20160605
 jsoncpp/1.8.3
 libjpeg/9d
 libpng/1.6.37
