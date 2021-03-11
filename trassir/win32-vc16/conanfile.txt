@@ -5,7 +5,6 @@ virtualrunenv
 [requires]
 b2/4.2.0
 boost/1.69.0
-opencv/2.4.13.5
 c-ares/1.15.0
 bzip2/1.0.8
 ffmpeg/3.3.1
@@ -19,6 +18,7 @@ libjpeg/9d
 libpng/1.6.37
 miniupnpc/2.1
 nasm/2.14
+opencv/2.4.13.5
 openal/1.20.1
 openh264/1.7.0
 xz_utils/5.2.4
