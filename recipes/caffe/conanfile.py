@@ -51,7 +51,7 @@ class CaffeConan(ConanFile):
             del self.options.gpu_arch
 
     def requirements(self):
-        self.requires.add("boost/1.72.0")
+        self.requires.add("boost/1.69.0")
         self.requires.add("glog/0.4.0")
         self.requires.add("gflags/2.2.2")
         self.requires.add("hdf5/1.10.6")
