@@ -6,6 +6,8 @@ virtualrunenv
 c-ares/1.15.0
 bzip2/1.0.8
 ffmpeg/3.3.1
+glog/0.4.0
+gflags/2.2.2
 intel_media_sdk/2018R2_1
 jsoncpp/1.8.3
 miniupnpc/2.1
