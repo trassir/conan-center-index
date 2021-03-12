@@ -44,6 +44,8 @@ diff -ru cmake/External/glog.cmake cmake-de/External/glog.cmake
 -  if (GLOG_FOUND)
 +  find_package(glog)
 +  if (glog_FOUND)
++       message(STATUS ">>>>>>>>>>>>>>>>>>>>glog_FOUND")
        set(GLOG_EXTERNAL FALSE)
++       message(STATUS ">>>>>>>>>>>>>>>>>>>>glog_NOT_FOUND")
    else()
      # fetch and build glog from github
