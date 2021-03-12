@@ -29,11 +29,7 @@ def prepare_environment():
     conan_run(['remote', 'add', 'artifactory-staging',
                artifactory + 'bintray-staging', 'True'])
     conan_run(['user', '--password', environ['LDAP_PASSWORD'],
-                '--remote', 'artifactory-staging', environ['LDAP_USERNAME'])
-    # conan_run(['remote', 'add', 'trassir-public',
-    #            trassir_org + 'conan-public', 'True'])
-    # conan_run(['remote', 'add', 'conan-center',
-    #            'https://conan.bintray.com', 'True'])
+               '--remote', 'artifactory-staging', environ['LDAP_USERNAME']])
 
     print('Remotes ready:')
     conan_run(['remote', 'list'])
