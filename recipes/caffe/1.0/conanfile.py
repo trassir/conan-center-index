@@ -64,7 +64,7 @@ class CaffeConan(ConanFile):
 
     def build_requirements(self):
         # waiting for an official protoc binary
-        self.build_requires("protoc_installer/3.9.1@bincrafters/stable")
+        self.build_requires("protoc/3.9.1")
 
     def source(self):
         tools.get(**self.conan_data["sources"][self.version])
