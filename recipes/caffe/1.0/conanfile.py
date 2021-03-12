@@ -82,10 +82,11 @@ class CaffeConan(ConanFile):
         cmake.definitions["USE_LEVELDB"] = self.options.with_leveldb
         cmake.definitions["USE_LMDB"] = self.options.with_lmdb
         cmake.definitions["USE_CUDNN"] = self.options.with_cudnn
+        print('PROTOBUF_PROTOC_EXECUTABLE:')
         print(self.deps_cpp_info['protoc'])
         print(self.deps_cpp_info['protoc'].rootpath)
         print(os.path.join(self.deps_cpp_info['protoc'].rootpath, 'bin', 'protoc'))
-        cmake.definitions["PROTOBUF_PROTOC_EXECUTABLE"] = os.path.join(self.deps_cpp_info['protoc'].rootpath, 'bin', 'protoc')
+        cmake.definitions["PROTOBUF_PROTOC_EXECUTABLE"] = os.path.join(self.deps_cpp_info['protoc'].rootpath, 'bin', 'protoc.exe')
 
         if self.options.with_gpu:
             cmake.definitions["CUDA_ARCH_NAME"] = self.options.gpu_arch
