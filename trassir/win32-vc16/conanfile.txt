@@ -6,6 +6,7 @@ virtualrunenv
 b2/4.2.0
 boost/1.69.0
 opencv/2.4.13.5
+caffe/1.0
 c-ares/1.15.0
 bzip2/1.0.8
 ffmpeg/3.3.1
@@ -30,6 +31,7 @@ axtls:shared=True
 boost:shared=True
 c-ares:shared=False
 caffe:shared=False
+caffe:with_opencv=True
 curl:shared=True
 facesdk:shared=True
 ffmpeg:shared=True
