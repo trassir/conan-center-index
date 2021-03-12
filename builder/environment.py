@@ -28,6 +28,8 @@ def prepare_environment():
                trassir_org + 'conan-staging', 'True'])
     conan_run(['remote', 'add', 'artifactory-staging',
                artifactory + 'bintray-staging', 'True'])
+    conan_run(['user', '--password', environ['LDAP_PASSWORD'],
+                '--remote', 'artifactory-staging', environ['LDAP_USERNAME'])
     # conan_run(['remote', 'add', 'trassir-public',
     #            trassir_org + 'conan-public', 'True'])
     # conan_run(['remote', 'add', 'conan-center',
