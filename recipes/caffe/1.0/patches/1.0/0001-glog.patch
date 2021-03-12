@@ -36,7 +36,7 @@ diff -ru cmake/External/gflags.cmake cmake-de/External/gflags.cmake
 diff -ru cmake/External/glog.cmake cmake-de/External/glog.cmake
 --- cmake/External/glog.cmake	2017-04-15 19:17:48.000000000 +0300
 +++ cmake-de/External/glog.cmake	2020-02-22 16:44:42.000000000 +0300
-@@ -5,8 +5,8 @@
+@@ -5,10 +5,12 @@
    set(__GLOG_INCLUDED TRUE)
  
    # try the system-wide glog first
@@ -44,6 +44,8 @@ diff -ru cmake/External/glog.cmake cmake-de/External/glog.cmake
 -  if (GLOG_FOUND)
 +  find_package(glog)
 +  if (glog_FOUND)
++      message(status ">>>>>>>>>>>>>>>>>glog_FOUND<<<<<<<<<<<<<<<<<<<<<<<<<")
        set(GLOG_EXTERNAL FALSE)
    else()
++    message(status ">>>>>>>>>>>>>>>>>glog_NOT_FOUND<<<<<<<<<<<<<<<<<<<<<<<<<")
      # fetch and build glog from github
