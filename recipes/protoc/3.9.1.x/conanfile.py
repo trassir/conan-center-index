@@ -5,7 +5,6 @@ import os
 class ProtocConanFile(ConanFile):
     _base_name = "protobuf"
     name = "protoc"
-    version = "3.9.1"
     description = "Protocol Buffers - Google's data interchange format"
     topics = ("conan", "protobuf", "protocol-buffers", "protocol-compiler", "serialization", "rpc", "protocol-compiler")
     url = "https://github.com/bincrafters/conan-protobuf"
@@ -24,7 +23,7 @@ class ProtocConanFile(ConanFile):
     settings = "os_build", "arch_build", "compiler", "arch"
 
     def build_requirements(self):
-        self.build_requires("protobuf/{}".format(self.version))
+        self.build_requires("protobuf/3.9.1")
 
     def _configure_cmake(self):
         cmake = CMake(self)
@@ -41,8 +40,7 @@ class ProtocConanFile(ConanFile):
         cmake.build()
 
     def source(self):
-        sha256 = "98e615d592d237f94db8bf033fba78cd404d979b0b70351a9e5aaff725398357"
-        tools.get("{0}/archive/v{1}.tar.gz".format(self.homepage, self.version), sha256=sha256)
+        tools.get(**self.conan_data["sources"][self.version])
         extracted_dir = self._base_name + "-" + self.version
         os.rename(extracted_dir, self._source_subfolder)
 
