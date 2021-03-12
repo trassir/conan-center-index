@@ -95,8 +95,7 @@ class CaffeConan(ConanFile):
                 cmake.definitions["CUDA_ARCH_PTX"] = self.options.gpu_arch_ptx
             cmake.definitions["CUDA_NVCC_FLAGS"] = '-std=c++11'
 
-        if self.settings.os == "Linux":
-            cmake.definitions["BLAS"] = "open"
+        cmake.definitions["BLAS"] = "open"
 
         cmake.configure(build_folder=self._build_subfolder)
         return cmake
