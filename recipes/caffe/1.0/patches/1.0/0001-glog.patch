@@ -49,3 +49,5 @@ diff -ru cmake/External/glog.cmake cmake-de/External/glog.cmake
    else()
 +    message(status ">>>>>>>>>>>>>>>>>glog_NOT_FOUND<<<<<<<<<<<<<<<<<<<<<<<<<")
      # fetch and build glog from github
+
+     # build directory
