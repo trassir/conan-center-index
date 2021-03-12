@@ -52,8 +52,6 @@ class ProtocConanFile(ConanFile):
         if tools.os_info.is_linux:
             # `ldd` shows dependencies named like libprotoc.so.3.9.1.0
             self.protobuf_dylib_mask = "*.so.*"
-        else:
-            assert False, "protoc package was not checked on your system"
         self.copy(self.protobuf_dylib_mask, dst="lib", src="lib", root_package="protobuf")
 
     def package(self):
