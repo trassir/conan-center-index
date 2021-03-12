@@ -46,14 +46,4 @@ def prepare_environment():
         upload_remote = 'trassir-public'
     print('Will upload to {remote}'.format(remote=upload_remote))
 
-    if 'CONAN_PASSWORD' in environ:
-        if custom_remotes:
-            conan_run(['user', '--password', environ['CONAN_PASSWORD'],
-                       '--remote', upload_remote,
-                       environ['REMOTES_UPLOAD_USER']])
-        else:
-            conan_run(['user', '--password', environ['CONAN_PASSWORD'],
-                       '--remote', upload_remote,
-                       'trassir-ci-bot'])
-
     return 'github-staging'
