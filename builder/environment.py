@@ -26,7 +26,7 @@ def prepare_environment():
     artifactory = 'https://artifactory.trassir.com/artifactory/api/conan/'
 
     conan_run(['remote', 'add', 'bintray-staging',
-               trassir_org + 'bintray-staging', 'True'])
+               artifactory + 'bintray-staging', 'True'])
     conan_run(['user', '--password', environ['LDAP_PASSWORD'],
                '--remote', 'bintray-staging', environ['LDAP_USERNAME']])
 
