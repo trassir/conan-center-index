@@ -23,26 +23,15 @@ def prepare_environment():
     conan_run(['remote', 'clean'])
 
     trassir_org = 'https://api.bintray.com/conan/trassir/'
-    if custom_remotes:
-        # allow download from official repos
-        conan_run(['remote', 'add', 'org-trassir-staging',
-                   trassir_org + 'conan-staging', 'True'])
-        conan_run(['remote', 'add', 'org-trassir-public',
-                   trassir_org + 'conan-public', 'True'])
-        conan_run(['remote', 'add', 'conan-center',
-                   'https://conan.bintray.com', 'True'])
-        # use unofficial repos for dev repo
-        conan_run(['remote', 'add', 'trassir-staging',
-                   environ['REMOTES_STAGING'], 'True'])
-        conan_run(['remote', 'add', 'trassir-public',
-                   environ['REMOTES_MASTER'], 'True'])
-    else:
-        conan_run(['remote', 'add', 'trassir-staging',
-                   trassir_org + 'conan-staging', 'True'])
-        conan_run(['remote', 'add', 'trassir-public',
-                   trassir_org + 'conan-public', 'True'])
-        conan_run(['remote', 'add', 'conan-center',
-                   'https://conan.bintray.com', 'True'])
+    artifactory = 'https://artifactory.trassir.com/artifactory/api/conan/'
+    conan_run(['remote', 'add', 'trassir-staging',
+               trassir_org + 'conan-staging', 'True'])
+    conan_run(['remote', 'add', 'artifactory-staging',
+               artifactory + 'bintray-staging', 'True'])
+    # conan_run(['remote', 'add', 'trassir-public',
+    #            trassir_org + 'conan-public', 'True'])
+    # conan_run(['remote', 'add', 'conan-center',
+    #            'https://conan.bintray.com', 'True'])
 
     print('Remotes ready:')
     conan_run(['remote', 'list'])
@@ -65,4 +54,4 @@ def prepare_environment():
                        '--remote', upload_remote,
                        'trassir-ci-bot'])
 
-    return upload_remote
+    return 'artifactory-staging'
