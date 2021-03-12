@@ -6,10 +6,10 @@ from conan_tools import conan_run
 
 def prepare_environment():
     # fork main repo and set these variables to have own repo for development
-    custom_remotes = \
-        'REMOTES_STAGING' in environ and environ['REMOTES_STAGING'] and \
-        'REMOTES_MASTER' in environ and environ['REMOTES_MASTER'] and \
-        'REMOTES_UPLOAD_USER' in environ and environ['REMOTES_UPLOAD_USER']
+    # custom_remotes = \
+    #     'REMOTES_STAGING' in environ and environ['REMOTES_STAGING'] and \
+    #     'REMOTES_MASTER' in environ and environ['REMOTES_MASTER'] and \
+    #     'REMOTES_UPLOAD_USER' in environ and environ['REMOTES_UPLOAD_USER']
 
     # these interfere with conan commands
     if 'CONAN_USERNAME' in environ:
