@@ -24,12 +24,16 @@ def prepare_environment():
 
     trassir_org = 'https://api.bintray.com/conan/trassir/'
     artifactory = 'https://artifactory.trassir.com/artifactory/api/conan/'
-    conan_run(['remote', 'add', 'trassir-staging',
-               trassir_org + 'conan-staging', 'True'])
-    conan_run(['remote', 'add', 'artifactory-staging',
-               artifactory + 'bintray-staging', 'True'])
+
+    conan_run(['remote', 'add', 'bintray-staging',
+               trassir_org + 'bintray-staging', 'True'])
     conan_run(['user', '--password', environ['LDAP_PASSWORD'],
-               '--remote', 'artifactory-staging', environ['LDAP_USERNAME']])
+               '--remote', 'bintray-staging', environ['LDAP_USERNAME']])
+
+    conan_run(['remote', 'add', 'github-staging',
+               artifactory + 'github-staging', 'True'])
+    conan_run(['user', '--password', environ['LDAP_PASSWORD'],
+               '--remote', 'github-staging', environ['LDAP_USERNAME']])
 
     print('Remotes ready:')
     conan_run(['remote', 'list'])
@@ -52,4 +56,4 @@ def prepare_environment():
                        '--remote', upload_remote,
                        'trassir-ci-bot'])
 
-    return 'artifactory-staging'
+    return 'github-staging'
