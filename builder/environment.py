@@ -22,7 +22,7 @@ def prepare_environment():
 
     conan_run(['remote', 'clean'])
 
-    trassir_org = 'https://api.bintray.com/conan/trassir/'
+    # trassir_org = 'https://api.bintray.com/conan/trassir/'
     artifactory = 'https://artifactory.trassir.com/artifactory/api/conan/'
 
     conan_run(['remote', 'add', 'bintray-staging',
