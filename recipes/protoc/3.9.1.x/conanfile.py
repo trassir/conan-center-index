@@ -47,6 +47,7 @@ class ProtocConanFile(ConanFile):
     def imports(self):
         # when built with protobuf:shared=True, protoc will require its libraries to run
         # so we copy those from protobuf package
+        self.protobuf_dylib_mask = "*.dll"
         if tools.os_info.is_linux:
             # `ldd` shows dependencies named like libprotoc.so.3.9.1.0
             self.protobuf_dylib_mask = "*.so.*"
