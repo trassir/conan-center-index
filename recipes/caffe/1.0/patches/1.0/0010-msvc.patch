@@ -1,0 +1,144 @@
+diff -urN --strip-trailing-cr caffe-1.0/CMakeLists.txt caffe/CMakeLists.txt
+--- CMakeLists.txt	2017-04-15 19:17:48.000000000 +0300
++++ CMakeLists.txt	2021-03-15 15:08:50.358428400 +0300
+@@ -45,6 +45,10 @@
+ # ---[ Dependencies
+ include(cmake/Dependencies.cmake)
+
++if(WIN32)
++  list(APPEND Caffe_DEFINITIONS PUBLIC -DNO_STRICT)
++endif()
++
+ # ---[ Flags
+ if(UNIX OR APPLE)
+   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -Wall")
+diff -urN --strip-trailing-cr caffe-1.0/src/caffe/common.cpp caffe/src/caffe/common.cpp
+--- src/caffe/common.cpp	2017-04-15 19:17:48.000000000 +0300
++++ src/caffe/common.cpp	2021-03-15 15:08:50.358428400 +0300
+@@ -1,3 +1,8 @@
++#if defined(_MSC_VER)
++#include <process.h>
++#define getpid() _getpid()
++#endif
++
+ #include <boost/thread.hpp>
+ #include <glog/logging.h>
+ #include <cmath>
+@@ -46,7 +51,11 @@
+   // Google logging.
+   ::google::InitGoogleLogging(*(pargv)[0]);
+   // Provide a backtrace on segfault.
++
++  // Windows port of glogs doesn't have this function built
++#if !defined(_MSC_VER)
+   ::google::InstallFailureSignalHandler();
++#endif
+ }
+ 
+ #ifdef CPU_ONLY  // CPU-only Caffe.
+diff -urN --strip-trailing-cr caffe-1.0/src/caffe/util/io.cpp caffe/src/caffe/util/io.cpp
+--- src/caffe/util/io.cpp	2017-04-15 19:17:48.000000000 +0300
++++ src/caffe/util/io.cpp	2021-03-15 15:08:50.460416200 +0300
+@@ -1,4 +1,9 @@
+ #include <fcntl.h>
++
++#if defined(_MSC_VER)
++#include <io.h>
++#endif
++
+ #include <google/protobuf/io/coded_stream.h>
+ #include <google/protobuf/io/zero_copy_stream_impl.h>
+ #include <google/protobuf/text_format.h>
+@@ -50,7 +55,11 @@
+ }
+ 
+ bool ReadProtoFromBinaryFile(const char* filename, Message* proto) {
++#if defined (_MSC_VER)  // for MSC compiler binary flag needs to be specified
++  int fd = open(filename, O_RDONLY | O_BINARY);
++#else
+   int fd = open(filename, O_RDONLY);
++#endif
+   CHECK_NE(fd, -1) << "File not found: " << filename;
+   ZeroCopyInputStream* raw_input = new FileInputStream(fd);
+   CodedInputStream* coded_input = new CodedInputStream(raw_input);
+diff -urN --strip-trailing-cr caffe-1.0/src/caffe/util/signal_handler.cpp caffe/src/caffe/util/signal_handler.cpp
+--- src/caffe/util/signal_handler.cpp	2017-04-15 19:17:48.000000000 +0300
++++ src/caffe/util/signal_handler.cpp	2021-03-15 15:08:50.462408300 +0300
+@@ -13,9 +13,15 @@
+ 
+   void handle_signal(int signal) {
+     switch (signal) {
++#ifdef _MSC_VER
++    case SIGBREAK:  // there is no SIGHUP in windows, take SIGBREAK instead.
++      got_sighup = true;
++      break;
++#else
+     case SIGHUP:
+       got_sighup = true;
+       break;
++#endif
+     case SIGINT:
+       got_sigint = true;
+       break;
+@@ -27,7 +33,14 @@
+       LOG(FATAL) << "Tried to hookup signal handlers more than once.";
+     }
+     already_hooked_up = true;
+-
++#ifdef _MSC_VER
++    if (signal(SIGBREAK, handle_signal) == SIG_ERR) {
++      LOG(FATAL) << "Cannot install SIGBREAK handler.";
++    }
++    if (signal(SIGINT, handle_signal) == SIG_ERR) {
++      LOG(FATAL) << "Cannot install SIGINT handler.";
++    }
++#else
+     struct sigaction sa;
+     // Setup the handler
+     sa.sa_handler = &handle_signal;
+@@ -42,11 +55,20 @@
+     if (sigaction(SIGINT, &sa, NULL) == -1) {
+       LOG(FATAL) << "Cannot install SIGINT handler.";
+     }
++#endif
+   }
+ 
+   // Set the signal handlers to the default.
+   void UnhookHandler() {
+     if (already_hooked_up) {
++#ifdef _MSC_VER
++      if (signal(SIGBREAK, SIG_DFL) == SIG_ERR) {
++        LOG(FATAL) << "Cannot uninstall SIGBREAK handler.";
++      }
++      if (signal(SIGINT, SIG_DFL) == SIG_ERR) {
++        LOG(FATAL) << "Cannot uninstall SIGINT handler.";
++      }
++#else
+       struct sigaction sa;
+       // Setup the sighub handler
+       sa.sa_handler = SIG_DFL;
+@@ -61,7 +83,7 @@
+       if (sigaction(SIGINT, &sa, NULL) == -1) {
+         LOG(FATAL) << "Cannot uninstall SIGINT handler.";
+       }
+-
++#endif
+       already_hooked_up = false;
+     }
+   }
+diff -urN --strip-trailing-cr caffe-1.0/tools/CMakeLists.txt caffe/tools/CMakeLists.txt
+--- tools/CMakeLists.txt	2017-04-15 19:17:48.000000000 +0300
++++ tools/CMakeLists.txt	2021-03-15 15:08:50.471392700 +0300
+@@ -13,6 +13,12 @@
+   # target
+   add_executable(${name} ${source})
+   target_link_libraries(${name} ${Caffe_LINK})
++  target_include_directories(${name} ${Caffe_INCLUDE_DIRS}
++                                PUBLIC
++                                $<BUILD_INTERFACE:${Caffe_INCLUDE_DIR}>)
++  if(Caffe_DEFINITIONS)
++    target_compile_definitions(caffe ${Caffe_DEFINITIONS})
++  endif()
+   caffe_default_properties(${name})
+ 
+   # set back RUNTIME_OUTPUT_DIRECTORY
