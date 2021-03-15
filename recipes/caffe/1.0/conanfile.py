@@ -60,6 +60,8 @@ class CaffeConan(ConanFile):
         self.requires.add("protobuf/3.9.1")
         if self.options.with_opencv:
             self.requires.add("opencv/2.4.13.5")
+        if self.options.with_leveldb:
+            self.requires.add("leveldb/1.22")
 
 
     def build_requirements(self):
