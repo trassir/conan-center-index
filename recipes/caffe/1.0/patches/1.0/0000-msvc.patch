@@ -1,0 +1,2319 @@
+Only in caffe: appveyor.yml
+Only in caffe/cmake: CaffeGetPrerequisites.cmake
+diff -ur --strip-trailing-cr caffe-1.0/cmake/ConfigGen.cmake caffe/cmake/ConfigGen.cmake
+--- cmake/ConfigGen.cmake	2017-04-15 19:17:48.000000000 +0300
++++ cmake/ConfigGen.cmake	2021-03-15 15:08:50.143003700 +0300
+@@ -24,6 +24,50 @@
+     set(HAVE_CUDA FALSE)
+   endif()
+ 
++  set(GFLAGS_IMPORTED OFF)
++  foreach(_lib ${GFLAGS_LIBRARIES})
++    if(TARGET ${_lib})
++      set(GFLAGS_IMPORTED ON)
++    endif()
++  endforeach()
++
++  set(GLOG_IMPORTED OFF)
++  foreach(_lib ${GLOG_LIBRARIES})
++    if(TARGET ${_lib})
++      set(GLOG_IMPORTED ON)
++    endif()
++  endforeach()
++
++  set(HDF5_IMPORTED OFF)
++  foreach(_lib ${HDF5_LIBRARIES} ${HDF5_HL_LIBRARIES})
++    if(TARGET ${_lib})
++      set(HDF5_IMPORTED ON)
++    endif()
++  endforeach()
++
++  set(LMDB_IMPORTED OFF)
++  if(USE_LMDB)
++    foreach(_lib ${LMDB_LIBRARIES})
++      if(TARGET ${_lib})
++        set(LMDB_IMPORTED ON)
++      endif()
++    endforeach()
++  endif()
++  set(LEVELDB_IMPORTED OFF)
++  set(SNAPPY_IMPORTED OFF)
++  if(USE_LEVELDB)
++    foreach(_lib ${LevelDB_LIBRARIES})
++      if(TARGET ${_lib})
++        set(LEVELDB_IMPORTED ON)
++      endif()
++    endforeach()
++    foreach(_lib ${Snappy_LIBRARIES})
++      if(TARGET ${_lib})
++        set(SNAPPY_IMPORTED ON)
++      endif()
++    endforeach()
++  endif()
++
+   if(NOT HAVE_CUDNN)
+     set(HAVE_CUDNN FALSE)
+   endif()
+@@ -33,7 +77,7 @@
+   configure_file("cmake/Templates/CaffeConfig.cmake.in" "${PROJECT_BINARY_DIR}/CaffeConfig.cmake" @ONLY)
+ 
+   # Add targets to the build-tree export set
+-  export(TARGETS caffe proto FILE "${PROJECT_BINARY_DIR}/CaffeTargets.cmake")
++  export(TARGETS caffe caffeproto FILE "${PROJECT_BINARY_DIR}/CaffeTargets.cmake")
+   export(PACKAGE Caffe)
+ 
+   # ---[ Configure install-tree CaffeConfig.cmake file ]---
+diff -ur --strip-trailing-cr caffe-1.0/cmake/Cuda.cmake caffe/cmake/Cuda.cmake
+--- cmake/Cuda.cmake	2017-04-15 19:17:48.000000000 +0300
++++ cmake/Cuda.cmake	2021-03-15 15:08:50.144001300 +0300
+@@ -36,8 +36,12 @@
+                     ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
+ 
+     if(__nvcc_res EQUAL 0)
++      # nvcc outputs text containing line breaks when building with MSVC.
++      # The line below prevents CMake from inserting a variable with line
++      # breaks in the cache
++      string(REGEX MATCH "([1-9].[0-9])" __nvcc_out "${__nvcc_out}")
+       string(REPLACE "2.1" "2.1(2.0)" __nvcc_out "${__nvcc_out}")
+-      set(CUDA_gpu_detect_output ${__nvcc_out} CACHE INTERNAL "Returned GPU architetures from caffe_detect_gpus tool" FORCE)
++      set(CUDA_gpu_detect_output ${__nvcc_out} CACHE INTERNAL "Returned GPU architetures from caffe_detect_gpus tool" FORCE)      
+     endif()
+   endif()
+ 
+@@ -174,11 +178,21 @@
+ 
+   find_path(CUDNN_INCLUDE cudnn.h
+             PATHS ${CUDNN_ROOT} $ENV{CUDNN_ROOT} ${CUDA_TOOLKIT_INCLUDE}
++            PATH_SUFFIXES include
+             DOC "Path to cuDNN include directory." )
++           
++  unset(_path_suffixes)
++  if(MSVC AND ${CMAKE_SIZEOF_VOID_P} EQUAL 8)
++    set(_path_suffixes PATH_SUFFIXES lib/x64)
++  else()
++    set(_path_suffixes PATH_SUFFIXES lib/Win32)    
++  endif()
+ 
+   # dynamic libs have different suffix in mac and linux
+   if(APPLE)
+     set(CUDNN_LIB_NAME "libcudnn.dylib")
++  elseif(MSVC)
++    set(CUDNN_LIB_NAME "cudnn")
+   else()
+     set(CUDNN_LIB_NAME "libcudnn.so")
+   endif()
+@@ -186,6 +200,7 @@
+   get_filename_component(__libpath_hist ${CUDA_CUDART_LIBRARY} PATH)
+   find_library(CUDNN_LIBRARY NAMES ${CUDNN_LIB_NAME}
+    PATHS ${CUDNN_ROOT} $ENV{CUDNN_ROOT} ${CUDNN_INCLUDE} ${__libpath_hist} ${__libpath_hist}/../lib
++   ${_path_suffixes}
+    DOC "Path to cuDNN library.")
+   
+   if(CUDNN_INCLUDE AND CUDNN_LIBRARY)
+diff -ur --strip-trailing-cr caffe-1.0/cmake/Dependencies.cmake caffe/cmake/Dependencies.cmake
+--- cmake/Dependencies.cmake	2017-04-15 19:17:48.000000000 +0300
++++ cmake/Dependencies.cmake	2021-03-15 15:08:50.144001300 +0300
+@@ -5,10 +5,15 @@
+ set(Caffe_COMPILE_OPTIONS "")
+ 
+ # ---[ Boost
+-find_package(Boost 1.55 REQUIRED COMPONENTS system thread filesystem)
++find_package(Boost 1.54 REQUIRED COMPONENTS system thread filesystem)
+ list(APPEND Caffe_INCLUDE_DIRS PUBLIC ${Boost_INCLUDE_DIRS})
++list(APPEND Caffe_DEFINITIONS PUBLIC -DBOOST_ALL_NO_LIB)
+ list(APPEND Caffe_LINKER_LIBS PUBLIC ${Boost_LIBRARIES})
+ 
++if(DEFINED MSVC AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 18.0.40629.0)
++  # Required for VS 2013 Update 4 or earlier.
++  list(APPEND Caffe_DEFINITIONS PUBLIC -DBOOST_NO_CXX11_TEMPLATE_ALIASES)
++endif()
+ # ---[ Threads
+ find_package(Threads REQUIRED)
+ list(APPEND Caffe_LINKER_LIBS PRIVATE ${CMAKE_THREAD_LIBS_INIT})
+@@ -43,7 +48,17 @@
+ include(cmake/ProtoBuf.cmake)
+ 
+ # ---[ HDF5
+-find_package(HDF5 COMPONENTS HL REQUIRED)
++if(MSVC)
++  # Find HDF5 using it's hdf5-config.cmake file with MSVC
++  if(DEFINED HDF5_DIR)
++    list(APPEND CMAKE_MODULE_PATH ${HDF5_DIR})
++  endif()
++  find_package(HDF5 COMPONENTS C HL REQUIRED)
++  set(HDF5_LIBRARIES hdf5-shared)
++  set(HDF5_HL_LIBRARIES hdf5_hl-shared)
++else()
++  find_package(HDF5 COMPONENTS HL REQUIRED)
++endif()
+ list(APPEND Caffe_INCLUDE_DIRS PUBLIC ${HDF5_INCLUDE_DIRS})
+ list(APPEND Caffe_LINKER_LIBS PUBLIC ${HDF5_LIBRARIES} ${HDF5_HL_LIBRARIES})
+ 
+@@ -86,7 +101,7 @@
+ endif()
+ 
+ if(USE_NCCL)
+-  find_package(NCCL REQUIRED)
++  include("cmake/External/nccl.cmake")
+   include_directories(SYSTEM ${NCCL_INCLUDE_DIR})
+   list(APPEND Caffe_LINKER_LIBS ${NCCL_LIBRARIES})
+   add_definitions(-DUSE_NCCL)
+@@ -173,6 +188,9 @@
+   endif()
+   if(PYTHONLIBS_FOUND AND NUMPY_FOUND AND Boost_PYTHON_FOUND)
+     set(HAVE_PYTHON TRUE)
++    if(Boost_USE_STATIC_LIBS AND MSVC)
++      list(APPEND Caffe_DEFINITIONS PUBLIC -DBOOST_PYTHON_STATIC_LIB)
++    endif()
+     if(BUILD_python_layer)
+       list(APPEND Caffe_DEFINITIONS PRIVATE -DWITH_PYTHON_LAYER)
+       list(APPEND Caffe_INCLUDE_DIRS PRIVATE ${PYTHON_INCLUDE_DIRS} ${NUMPY_INCLUDE_DIR} PUBLIC ${Boost_INCLUDE_DIRS})
+@@ -183,11 +201,17 @@
+ 
+ # ---[ Matlab
+ if(BUILD_matlab)
+-  find_package(MatlabMex)
+-  if(MATLABMEX_FOUND)
+-    set(HAVE_MATLAB TRUE)
++  if(MSVC)
++    find_package(Matlab COMPONENTS MAIN_PROGRAM MX_LIBRARY)
++    if(MATLAB_FOUND)
++      set(HAVE_MATLAB TRUE)
++    endif()
++  else()
++    find_package(MatlabMex)
++    if(MATLABMEX_FOUND)
++      set(HAVE_MATLAB TRUE)
++    endif()
+   endif()
+-
+   # sudo apt-get install liboctave-dev
+   find_program(Octave_compiler NAMES mkoctfile DOC "Octave C++ compiler")
+ 
+Only in caffe/cmake/External: nccl.cmake
+diff -ur --strip-trailing-cr caffe-1.0/cmake/lint.cmake caffe/cmake/lint.cmake
+--- cmake/lint.cmake	2017-04-15 19:17:48.000000000 +0300
++++ cmake/lint.cmake	2021-03-15 15:08:50.154972900 +0300
+@@ -1,6 +1,10 @@
+ 
+ set(CMAKE_SOURCE_DIR ..)
+-set(LINT_COMMAND ${CMAKE_SOURCE_DIR}/scripts/cpp_lint.py)
++set(python_executable)
++if(WIN32)
++  set(python_executable ${PYTHON_EXECUTABLE})
++endif()
++set(LINT_COMMAND ${python_executable} ${CMAKE_SOURCE_DIR}/scripts/cpp_lint.py)
+ set(SRC_FILE_EXTENSIONS h hpp hu c cpp cu cc)
+ set(EXCLUDE_FILE_EXTENSTIONS pb.h pb.cc)
+ set(LINT_DIRS include src/caffe examples tools python matlab)
+@@ -22,7 +26,9 @@
+ endforeach()
+ 
+ # exclude generated pb files
+-list(REMOVE_ITEM LINT_SOURCES ${EXCLUDED_FILES})
++if(EXCLUDED_FILES)
++  list(REMOVE_ITEM LINT_SOURCES ${EXCLUDED_FILES})
++endif()
+ 
+ execute_process(
+     COMMAND ${LINT_COMMAND} ${LINT_SOURCES}
+diff -ur --strip-trailing-cr caffe-1.0/cmake/Modules/FindGFlags.cmake caffe/cmake/Modules/FindGFlags.cmake
+--- cmake/Modules/FindGFlags.cmake	2017-04-15 19:17:48.000000000 +0300
++++ cmake/Modules/FindGFlags.cmake	2021-03-15 15:08:50.146996200 +0300
+@@ -14,26 +14,15 @@
+ set(GFLAGS_ROOT_DIR "" CACHE PATH "Folder contains Gflags")
+ 
+ # We are testing only a couple of files in the include directories
+-if(WIN32)
+-    find_path(GFLAGS_INCLUDE_DIR gflags/gflags.h
+-        PATHS ${GFLAGS_ROOT_DIR}/src/windows)
+-else()
+-    find_path(GFLAGS_INCLUDE_DIR gflags/gflags.h
+-        PATHS ${GFLAGS_ROOT_DIR})
+-endif()
++find_path(GFLAGS_INCLUDE_DIR gflags/gflags.h
++    PATHS ${GFLAGS_ROOT_DIR})
+ 
+ if(MSVC)
+-    find_library(GFLAGS_LIBRARY_RELEASE
+-        NAMES libgflags
+-        PATHS ${GFLAGS_ROOT_DIR}
+-        PATH_SUFFIXES Release)
+-
+-    find_library(GFLAGS_LIBRARY_DEBUG
+-        NAMES libgflags-debug
+-        PATHS ${GFLAGS_ROOT_DIR}
+-        PATH_SUFFIXES Debug)
++    # rely on gflags-config.cmake
++    find_package(gflags NO_MODULE)
+ 
+-    set(GFLAGS_LIBRARY optimized ${GFLAGS_LIBRARY_RELEASE} debug ${GFLAGS_LIBRARY_DEBUG})
++    set(GFLAGS_LIBRARY ${gflags_LIBRARIES})
++    set(GFLAGS_INCLUDE_DIR ${gflags_INCLUDE_DIRS})
+ else()
+     find_library(GFLAGS_LIBRARY gflags)
+ endif()
+diff -ur --strip-trailing-cr caffe-1.0/cmake/Modules/FindGlog.cmake caffe/cmake/Modules/FindGlog.cmake
+--- cmake/Modules/FindGlog.cmake	2017-04-15 19:17:48.000000000 +0300
++++ cmake/Modules/FindGlog.cmake	2021-03-15 15:08:50.146996200 +0300
+@@ -13,24 +13,15 @@
+ 
+ set(GLOG_ROOT_DIR "" CACHE PATH "Folder contains Google glog")
+ 
+-if(WIN32)
+-    find_path(GLOG_INCLUDE_DIR glog/logging.h
+-        PATHS ${GLOG_ROOT_DIR}/src/windows)
+-else()
+-    find_path(GLOG_INCLUDE_DIR glog/logging.h
+-        PATHS ${GLOG_ROOT_DIR})
+-endif()
++find_path(GLOG_INCLUDE_DIR glog/logging.h
++    PATHS ${GLOG_ROOT_DIR})
+ 
+ if(MSVC)
+-    find_library(GLOG_LIBRARY_RELEASE libglog_static
+-        PATHS ${GLOG_ROOT_DIR}
+-        PATH_SUFFIXES Release)
+-
+-    find_library(GLOG_LIBRARY_DEBUG libglog_static
+-        PATHS ${GLOG_ROOT_DIR}
+-        PATH_SUFFIXES Debug)
++    # rely on glog-config.cmake
++    find_package(glog NO_MODULE)
+ 
+-    set(GLOG_LIBRARY optimized ${GLOG_LIBRARY_RELEASE} debug ${GLOG_LIBRARY_DEBUG})
++    set(GLOG_LIBRARY ${glog_LIBRARIES})
++    set(GLOG_INCLUDE_DIR ${glog_INCLUDE_DIRS})
+ else()
+     find_library(GLOG_LIBRARY glog
+         PATHS ${GLOG_ROOT_DIR}
+diff -ur --strip-trailing-cr caffe-1.0/cmake/Modules/FindLevelDB.cmake caffe/cmake/Modules/FindLevelDB.cmake
+--- cmake/Modules/FindLevelDB.cmake	2017-04-15 19:17:48.000000000 +0300
++++ cmake/Modules/FindLevelDB.cmake	2021-03-15 15:08:50.148029700 +0300
+@@ -5,14 +5,20 @@
+ #  LevelDB_FOUND     - True if LevelDB found.
+ 
+ # Look for the header file.
+-find_path(LevelDB_INCLUDE NAMES leveldb/db.h
+-                          PATHS $ENV{LEVELDB_ROOT}/include /opt/local/include /usr/local/include /usr/include
+-                          DOC "Path in which the file leveldb/db.h is located." )
++if(MSVC)
++  find_package(LevelDB NO_MODULE)
++  set(LevelDB_INCLUDE ${LevelDB_INCLUDE_DIRS})
++  set(LevelDB_LIBRARY ${LevelDB_LIBRARIES})
++else()
++  find_path(LevelDB_INCLUDE NAMES leveldb/db.h
++                            PATHS $ENV{LEVELDB_ROOT}/include /opt/local/include /usr/local/include /usr/include
++                            DOC "Path in which the file leveldb/db.h is located." )
+ 
+-# Look for the library.
+-find_library(LevelDB_LIBRARY NAMES leveldb
+-                             PATHS /usr/lib $ENV{LEVELDB_ROOT}/lib
+-                             DOC "Path to leveldb library." )
++  # Look for the library.
++  find_library(LevelDB_LIBRARY NAMES leveldb
++                              PATHS /usr/lib $ENV{LEVELDB_ROOT}/lib
++                              DOC "Path to leveldb library." )
++endif()
+ 
+ include(FindPackageHandleStandardArgs)
+ find_package_handle_standard_args(LevelDB DEFAULT_MSG LevelDB_INCLUDE LevelDB_LIBRARY)
+diff -ur --strip-trailing-cr caffe-1.0/cmake/Modules/FindLMDB.cmake caffe/cmake/Modules/FindLMDB.cmake
+--- cmake/Modules/FindLMDB.cmake	2017-04-15 19:17:48.000000000 +0300
++++ cmake/Modules/FindLMDB.cmake	2021-03-15 15:08:50.148029700 +0300
+@@ -12,8 +12,12 @@
+ # Copyright 2013 Conrad Steenberg <conrad.steenberg@gmail.com>
+ # Aug 31, 2013
+ 
+-find_path(LMDB_INCLUDE_DIR NAMES  lmdb.h PATHS "$ENV{LMDB_DIR}/include")
+-find_library(LMDB_LIBRARIES NAMES lmdb   PATHS "$ENV{LMDB_DIR}/lib" )
++if(MSVC)
++  find_package(LMDB NO_MODULE)
++else()
++  find_path(LMDB_INCLUDE_DIR NAMES  lmdb.h PATHS "$ENV{LMDB_DIR}/include")
++  find_library(LMDB_LIBRARIES NAMES lmdb   PATHS "$ENV{LMDB_DIR}/lib" )
++endif()
+ 
+ include(FindPackageHandleStandardArgs)
+ find_package_handle_standard_args(LMDB DEFAULT_MSG LMDB_INCLUDE_DIR LMDB_LIBRARIES)
+diff -ur --strip-trailing-cr caffe-1.0/cmake/Modules/FindOpenBLAS.cmake caffe/cmake/Modules/FindOpenBLAS.cmake
+--- cmake/Modules/FindOpenBLAS.cmake	2017-04-15 19:17:48.000000000 +0300
++++ cmake/Modules/FindOpenBLAS.cmake	2021-03-15 15:08:50.149986300 +0300
+@@ -28,8 +28,13 @@
+         $ENV{OpenBLAS_HOME}/lib
+  )
+ 
++if(MSVC)
++  set(OpenBLAS_LIB_NAMES libopenblas.dll.a)
++else()
++  set(OpenBLAS_LIB_NAMES openblas)
++endif()
+ FIND_PATH(OpenBLAS_INCLUDE_DIR NAMES cblas.h PATHS ${Open_BLAS_INCLUDE_SEARCH_PATHS})
+-FIND_LIBRARY(OpenBLAS_LIB NAMES openblas PATHS ${Open_BLAS_LIB_SEARCH_PATHS})
++FIND_LIBRARY(OpenBLAS_LIB NAMES ${OpenBLAS_LIB_NAMES} PATHS ${Open_BLAS_LIB_SEARCH_PATHS})
+ 
+ SET(OpenBLAS_FOUND ON)
+ 
+diff -ur --strip-trailing-cr caffe-1.0/cmake/Modules/FindSnappy.cmake caffe/cmake/Modules/FindSnappy.cmake
+--- cmake/Modules/FindSnappy.cmake	2017-04-15 19:17:48.000000000 +0300
++++ cmake/Modules/FindSnappy.cmake	2021-03-15 15:08:50.149986300 +0300
+@@ -7,12 +7,16 @@
+ #  SNAPPY_FOUND
+ #  Snappy_INCLUDE_DIR
+ #  Snappy_LIBRARIES
++if(MSVC)
++  # rely on snappy-config.cmake
++  find_package(Snappy NO_MODULE)
++else()
++  find_path(Snappy_INCLUDE_DIR NAMES snappy.h
++                              PATHS ${SNAPPY_ROOT_DIR} ${SNAPPY_ROOT_DIR}/include)
+ 
+-find_path(Snappy_INCLUDE_DIR NAMES snappy.h
+-                             PATHS ${SNAPPY_ROOT_DIR} ${SNAPPY_ROOT_DIR}/include)
+-
+-find_library(Snappy_LIBRARIES NAMES snappy
+-                              PATHS ${SNAPPY_ROOT_DIR} ${SNAPPY_ROOT_DIR}/lib)
++  find_library(Snappy_LIBRARIES NAMES snappy
++                                PATHS ${SNAPPY_ROOT_DIR} ${SNAPPY_ROOT_DIR}/lib)
++endif()
+ 
+ include(FindPackageHandleStandardArgs)
+ find_package_handle_standard_args(Snappy DEFAULT_MSG Snappy_INCLUDE_DIR Snappy_LIBRARIES)
+diff -ur --strip-trailing-cr caffe-1.0/cmake/ProtoBuf.cmake caffe/cmake/ProtoBuf.cmake
+--- cmake/ProtoBuf.cmake	2017-04-15 19:17:48.000000000 +0300
++++ cmake/ProtoBuf.cmake	2021-03-15 15:08:50.150982400 +0300
+@@ -1,7 +1,13 @@
+ # Finds Google Protocol Buffers library and compilers and extends
+ # the standard cmake script with version and python generation support
+ 
+-find_package( Protobuf REQUIRED )
++if(MSVC)
++  # search using protobuf-config.cmake
++  find_package( Protobuf REQUIRED NO_MODULE)
++  set(PROTOBUF_INCLUDE_DIR ${PROTOBUF_INCLUDE_DIRS})
++else()
++  find_package( Protobuf REQUIRED )
++endif()
+ list(APPEND Caffe_INCLUDE_DIRS PUBLIC ${PROTOBUF_INCLUDE_DIR})
+ list(APPEND Caffe_LINKER_LIBS PUBLIC ${PROTOBUF_LIBRARIES})
+ 
+Only in caffe/cmake: TargetResolvePrerequesites.cmake
+diff -ur --strip-trailing-cr caffe-1.0/cmake/Targets.cmake caffe/cmake/Targets.cmake
+--- cmake/Targets.cmake	2017-04-15 19:17:48.000000000 +0300
++++ cmake/Targets.cmake	2021-03-15 15:08:50.151979900 +0300
+@@ -1,7 +1,16 @@
+ ################################################################################################
+ # Defines global Caffe_LINK flag, This flag is required to prevent linker from excluding
+ # some objects which are not addressed directly but are registered via static constructors
+-macro(caffe_set_caffe_link)
++macro(caffe_set_caffe_link)  
++  if(MSVC AND CMAKE_GENERATOR MATCHES Ninja)        
++    foreach(_suffix "" ${CMAKE_CONFIGURATION_TYPES})
++      if(NOT _suffix STREQUAL "")
++        string(TOUPPER _${_suffix} _suffix)
++      endif()
++      set(CMAKE_CXX_FLAGS${_suffix} "${CMAKE_CXX_FLAGS${_suffix}} /FS")
++      set(CMAKE_C_FLAGS${_suffix} "${CMAKE_C_FLAGS${_suffix}} /FS")              
++    endforeach()
++  endif()
+   if(BUILD_SHARED_LIBS)
+     set(Caffe_LINK caffe)
+   else()
+@@ -9,6 +18,8 @@
+       set(Caffe_LINK -Wl,-force_load caffe)
+     elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+       set(Caffe_LINK -Wl,--whole-archive caffe -Wl,--no-whole-archive)
++    elseif(MSVC)
++      set(Caffe_LINK caffe)
+     endif()
+   endif()
+ endmacro()
+@@ -52,9 +63,18 @@
+ #   caffe_pickup_caffe_sources(<root>)
+ function(caffe_pickup_caffe_sources root)
+   # put all files in source groups (visible as subfolder in many IDEs)
++  set(caffe_export_hdr_in ${PROJECT_SOURCE_DIR}/cmake/Templates/export.hpp.in)
++  set(caffe_export_hdr ${PROJECT_BINARY_DIR}/caffe/export.hpp)  
++  set(caffe_symbols_hdr ${PROJECT_BINARY_DIR}/caffe/include_symbols.hpp)  
++  set_source_files_properties(${caffe_export_hdr} ${caffe_symbols_hdr} PROPERTIES GENERATED TRUE)
++  
+   caffe_source_group("Include"        GLOB "${root}/include/caffe/*.h*")
+   caffe_source_group("Include\\Util"  GLOB "${root}/include/caffe/util/*.h*")
+   caffe_source_group("Include"        GLOB "${PROJECT_BINARY_DIR}/caffe_config.h*")
++  caffe_source_group("Include"        GLOB "${caffe_export_hdr}")
++  if(MSVC AND NOT BUILD_SHARED_LIBS)
++    caffe_source_group("Include"        GLOB "${caffe_symbols_hdr}")
++  endif()
+   caffe_source_group("Source"         GLOB "${root}/src/caffe/*.cpp")
+   caffe_source_group("Source\\Util"   GLOB "${root}/src/caffe/util/*.cpp")
+   caffe_source_group("Source\\Layers" GLOB "${root}/src/caffe/layers/*.cpp")
+@@ -76,7 +96,13 @@
+   list(REMOVE_ITEM  srcs ${test_srcs})
+ 
+   # adding headers to make the visible in some IDEs (Qt, VS, Xcode)
+-  list(APPEND srcs ${hdrs} ${PROJECT_BINARY_DIR}/caffe_config.h)
++  list(APPEND srcs ${hdrs}
++                   ${PROJECT_BINARY_DIR}/caffe_config.h
++                   ${caffe_export_hdr}
++  )
++  if(MSVC AND NOT BUILD_SHARED_LIBS)
++    list(APPEND srcs ${caffe_symbols_hdr})
++  endif()
+   list(APPEND test_srcs ${test_hdrs})
+ 
+   # collect cuda files
+@@ -99,6 +125,10 @@
+   set(cuda ${cuda} PARENT_SCOPE)
+   set(test_srcs ${test_srcs} PARENT_SCOPE)
+   set(test_cuda ${test_cuda} PARENT_SCOPE)
++  set(caffe_export_hdr_in ${caffe_export_hdr_in} PARENT_SCOPE)
++  set(caffe_export_hdr ${caffe_export_hdr} PARENT_SCOPE)
++  set(caffe_symbols_hdr ${caffe_symbols_hdr} PARENT_SCOPE)
++  
+ endfunction()
+ 
+ ################################################################################################
+diff -ur --strip-trailing-cr caffe-1.0/cmake/Templates/CaffeConfig.cmake.in caffe/cmake/Templates/CaffeConfig.cmake.in
+--- cmake/Templates/CaffeConfig.cmake.in	2017-04-15 19:17:48.000000000 +0300
++++ cmake/Templates/CaffeConfig.cmake.in	2021-03-15 15:08:50.152977500 +0300
+@@ -37,6 +37,30 @@
+   endif()
+ endif()
+ 
++# Handle other imported targets libraries
++if(@GFLAGS_IMPORTED@)
++  find_package(gflags REQUIRED NO_MODULE)
++endif()
++
++if(@GLOG_IMPORTED@)
++  find_package(glog REQUIRED NO_MODULE)
++endif()
++
++if(@HDF5_IMPORTED@)
++  find_package(HDF5 COMPONENTS C HL REQUIRED NO_MODULE)
++endif()
++
++if(@USE_LMDB@ AND @LMDB_IMPORTED@)
++  find_package(LMDB REQUIRED NO_MODULE)
++endif()
++
++if(@USE_LEVELDB@ AND @LEVELDB_IMPORTED@)
++  find_package(LevelDB REQUIRED NO_MODULE)
++  if(@SNAPPY_IMPORTED@)
++    find_package(Snappy REQUIRED NO_MODULE)
++  endif()
++endif()
++
+ # Compute paths
+ get_filename_component(Caffe_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
+ 
+Only in caffe/cmake/Templates: export.hpp.in
+Only in caffe/cmake: WindowsCreateLinkHeader.cmake
+Only in caffe/cmake: WindowsDownloadPrebuiltDependencies.cmake
+diff -ur --strip-trailing-cr caffe-1.0/CMakeLists.txt caffe/CMakeLists.txt
+--- CMakeLists.txt	2017-04-15 19:17:48.000000000 +0300
++++ CMakeLists.txt	2021-03-15 15:08:50.138583700 +0300
+@@ -1,4 +1,12 @@
+ cmake_minimum_required(VERSION 2.8.7)
++if(MSVC)
++  # CMake 3.4 introduced a WINDOWS_EXPORT_ALL_SYMBOLS target property that makes it possible to
++  # build shared libraries without using the usual declspec() decoration.
++  # See: https://blog.kitware.com/create-dlls-on-windows-without-declspec-using-new-cmake-export-all-feature/
++  # and https://cmake.org/cmake/help/v3.5/prop_tgt/WINDOWS_EXPORT_ALL_SYMBOLS.html
++  # for details.
++  cmake_minimum_required(VERSION 3.4)
++endif()
+ if(POLICY CMP0046)
+   cmake_policy(SET CMP0046 NEW)
+ endif()
+@@ -25,15 +33,22 @@
+ include(cmake/Misc.cmake)
+ include(cmake/Summary.cmake)
+ include(cmake/ConfigGen.cmake)
++include(cmake/WindowsCreateLinkHeader.cmake)
++include(cmake/TargetResolvePrerequesites.cmake)
+ 
+ # ---[ Options
+ caffe_option(CPU_ONLY  "Build Caffe without CUDA support" OFF) # TODO: rename to USE_CUDA
+ caffe_option(USE_CUDNN "Build Caffe with cuDNN library support" ON IF NOT CPU_ONLY)
+ caffe_option(USE_NCCL "Build Caffe with NCCL library support" OFF)
+-caffe_option(BUILD_SHARED_LIBS "Build shared libraries" ON)
++if(MSVC)
++  # default to static libs
++  caffe_option(BUILD_SHARED_LIBS "Build shared libraries" OFF)
++else()
++  caffe_option(BUILD_SHARED_LIBS "Build shared libraries" ON)
++endif()
+ caffe_option(BUILD_python "Build Python wrapper" ON)
+ set(python_version "2" CACHE STRING "Specify which Python version to use")
+-caffe_option(BUILD_matlab "Build Matlab wrapper" OFF IF UNIX OR APPLE)
++caffe_option(BUILD_matlab "Build Matlab wrapper" OFF)
+ caffe_option(BUILD_docs   "Build documentation" ON IF UNIX OR APPLE)
+ caffe_option(BUILD_python_layer "Build the Caffe Python layer" ON)
+ caffe_option(USE_OPENCV "Build with OpenCV support" ON)
+@@ -41,6 +56,25 @@
+ caffe_option(USE_LMDB "Build with lmdb" ON)
+ caffe_option(ALLOW_LMDB_NOLOCK "Allow MDB_NOLOCK when reading LMDB files (only if necessary)" OFF)
+ caffe_option(USE_OPENMP "Link with OpenMP (when your BLAS wants OpenMP and you get linker errors)" OFF)
++caffe_option(protobuf_MODULE_COMPATIBLE "Make the protobuf-config.cmake compatible with the module mode" ON IF MSVC)
++caffe_option(COPY_PREREQUISITES "Copy the prerequisites next to each executable or shared library directory" ON IF MSVC)
++caffe_option(INSTALL_PREREQUISITES "Install the prerequisites next to each executable or shared library directory" ON IF MSVC)
++
++if(MSVC AND BUILD_SHARED_LIBS)
++  if(CMAKE_GENERATOR MATCHES "Visual Studio")
++    # see issue https://gitlab.kitware.com/cmake/cmake/issues/16552#note_215236
++    message(FATAL_ERROR "The Visual Studio generator cannot build a shared library. Use the Ninja generator instead.")
++  endif()
++  # Some tests (solver tests) fail when caffe is built as a shared library. The problem comes
++  # from protobuf that has a global static empty_string_ variable. Since caffe and test.testbin
++  # link to a static protobuf library both end up with their own instance of the empty_string_
++  # variable. This causes some SEH exception to occur. In practice if the caffe executable does not link
++  # to protobuf this problem should not happen. Use at your own risk.
++  message(WARNING "Some tests (solvers) will fail when building as a shared library with MSVC")
++endif()
++
++# ---[ Prebuild dependencies on windows
++include(cmake/WindowsDownloadPrebuiltDependencies.cmake)
+ 
+ # ---[ Dependencies
+ include(cmake/Dependencies.cmake)
+@@ -96,11 +130,16 @@
+ add_subdirectory(docs)
+ 
+ # ---[ Linter target
+-add_custom_target(lint COMMAND ${CMAKE_COMMAND} -P ${PROJECT_SOURCE_DIR}/cmake/lint.cmake)
++add_custom_target(lint COMMAND ${CMAKE_COMMAND} -DPYTHON_EXECUTABLE=${PYTHON_EXECUTABLE} -P ${PROJECT_SOURCE_DIR}/cmake/lint.cmake)
+ 
+ # ---[ pytest target
+ if(BUILD_python)
+-  add_custom_target(pytest COMMAND python${python_version} -m unittest discover -s caffe/test WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/python )
++  if(UNIX)
++    set(python_executable python${python_version})
++  else()
++    set(python_executable ${PYTHON_EXECUTABLE})
++  endif()
++  add_custom_target(pytest COMMAND ${python_executable} -m unittest discover -s caffe/test WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/python )
+   add_dependencies(pytest pycaffe)
+ endif()
+ 
+Only in caffe/data/mnist: get_mnist.ps1
+diff -ur --strip-trailing-cr caffe-1.0/docs/install_apt_debian.md caffe/docs/install_apt_debian.md
+--- docs/install_apt_debian.md	2017-04-15 19:17:48.000000000 +0300
++++ docs/install_apt_debian.md	2021-03-15 15:08:50.161955000 +0300
+@@ -96,18 +96,22 @@
+ Some users may find their favorate compiler doesn't work with CUDA.
+ 
+ ```
+-CXX compiler |  CUDA 7.5  |  CUDA 8.0  |
+--------------+------------+------------+-
+-GCC-7        |     ?      |     ?      |
+-GCC-6        |     ✘      |     ✘      |
+-GCC-5        |     ✔ [1]  |     ✔      |
+-CLANG-4.0    |     ?      |     ?      |
+-CLANG-3.9    |     ✘      |     ✘      |
+-CLANG-3.8    |     ?      |     ✔      |
++CXX compiler |  CUDA 7.5  |  CUDA 8.0  |  CUDA 9.0  |
++-------------+------------+------------+------------+
++GCC-8        |     ?      |     ?      |     ?      |
++GCC-7        |     ?      |     ?      |     ?      |
++GCC-6        |     ✘      |     ✘      |     ✔      |
++GCC-5        |     ✔ [1]  |     ✔      |     ✔      |
++-------------+------------+------------+------------+
++CLANG-4.0    |     ?      |     ?      |     ?      |
++CLANG-3.9    |     ✘      |     ✘      |     ✔      |
++CLANG-3.8    |     ?      |     ✔      |     ✔      |
+ ```
+ 
+ `[1]` CUDA 7.5 's `host_config.h` must be patched before working with GCC-5.
+ 
++`[2]` CUDA 9.0: https://devblogs.nvidia.com/parallelforall/cuda-9-features-revealed/
++
+ BTW, please forget the GCC-4.X series, since its `libstdc++` ABI is not compatible with GCC-5's.
+ You may encounter failure linking GCC-4.X object files against GCC-5 libraries.
+ (See https://wiki.debian.org/GCC5 )
+diff -ur --strip-trailing-cr caffe-1.0/examples/CMakeLists.txt caffe/examples/CMakeLists.txt
+--- examples/CMakeLists.txt	2017-04-15 19:17:48.000000000 +0300
++++ examples/CMakeLists.txt	2021-03-15 15:08:50.208860200 +0300
+@@ -3,15 +3,19 @@
+ foreach(source_file ${examples_srcs})
+   # get file name
+   get_filename_component(name ${source_file} NAME_WE)
+-    
++
+   # get folder name
+   get_filename_component(path ${source_file} PATH)
+   get_filename_component(folder ${path} NAME_WE)
+-    
++
+   add_executable(${name} ${source_file})
+   target_link_libraries(${name} ${Caffe_LINK})
+   caffe_default_properties(${name})
+ 
++  if(MSVC AND COPY_PREREQUISITES)
++    caffe_copy_prerequisites(${name} USE_HARD_LINKS)
++  endif()
++
+   # set back RUNTIME_OUTPUT_DIRECTORY
+   set_target_properties(${name} PROPERTIES
+     RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/examples/${folder}")
+@@ -22,6 +26,10 @@
+   install(TARGETS ${name} DESTINATION ${CMAKE_INSTALL_BINDIR})
+ 
+ 
++  if(MSVC AND INSTALL_PREREQUISITES)
++    caffe_install_prerequisites(${name} DESTINATION bin)
++  endif()
++
+   if(UNIX OR APPLE)
+     # Funny command to make tutorials work
+     # TODO: remove in future as soon as naming is standardized everywhere
+diff -ur --strip-trailing-cr caffe-1.0/examples/cpp_classification/classification.cpp caffe/examples/cpp_classification/classification.cpp
+--- examples/cpp_classification/classification.cpp	2017-04-15 19:17:48.000000000 +0300
++++ examples/cpp_classification/classification.cpp	2021-03-15 15:08:50.221793700 +0300
+@@ -92,7 +92,7 @@
+ static std::vector<int> Argmax(const std::vector<float>& v, int N) {
+   std::vector<std::pair<float, int> > pairs;
+   for (size_t i = 0; i < v.size(); ++i)
+-    pairs.push_back(std::make_pair(v[i], i));
++    pairs.push_back(std::make_pair(v[i], static_cast<int>(i)));
+   std::partial_sort(pairs.begin(), pairs.begin() + N, pairs.end(), PairCompare);
+ 
+   std::vector<int> result;
+diff -ur --strip-trailing-cr caffe-1.0/examples/mnist/convert_mnist_data.cpp caffe/examples/mnist/convert_mnist_data.cpp
+--- examples/mnist/convert_mnist_data.cpp	2017-04-15 19:17:48.000000000 +0300
++++ examples/mnist/convert_mnist_data.cpp	2021-03-15 15:08:50.234757400 +0300
+@@ -16,6 +16,11 @@
+ #include <lmdb.h>
+ #endif
+ 
++#if defined(_MSC_VER)
++#include <direct.h>
++#define mkdir(X, Y) _mkdir(X)
++#endif
++
+ #include <stdint.h>
+ #include <sys/stat.h>
+ 
+Only in caffe/examples/mnist: create_mnist.ps1
+diff -ur --strip-trailing-cr caffe-1.0/examples/mnist/readme.md caffe/examples/mnist/readme.md
+--- examples/mnist/readme.md	2017-04-15 19:17:48.000000000 +0300
++++ examples/mnist/readme.md	2021-03-15 15:08:50.241738600 +0300
+@@ -8,7 +8,7 @@
+ 
+ # Training LeNet on MNIST with Caffe
+ 
+-We will assume that you have Caffe successfully compiled. If not, please refer to the [Installation page](/installation.html). In this tutorial, we will assume that your Caffe installation is located at `CAFFE_ROOT`.
++We will assume that you have Caffe successfully compiled. If not, please refer to the [Installation page](/installation.html). In this tutorial, we will assume that your Caffe installation is located at `CAFFE_ROOT`. On Windows use the powershell (`.ps1`) instead of the bash (`.sh`) scripts.
+ 
+ ## Prepare Datasets
+ 
+Only in caffe/examples/mnist: train_lenet.ps1
+Only in caffe: .git
+Only in caffe: .gitattributes
+diff -ur --strip-trailing-cr caffe-1.0/.gitignore caffe/.gitignore
+--- .gitignore	2017-04-15 19:17:48.000000000 +0300
++++ .gitignore	2021-03-15 15:08:50.137585100 +0300
+@@ -5,15 +5,21 @@
+ *.lo
+ *.o
+ *.cuo
++*.obj
+ 
+ # Compiled Dynamic libraries
+ *.so
+ *.dylib
++*.dll
+ 
+ # Compiled Static libraries
+ *.lai
+ *.la
+ *.a
++*.lib
++
++# Compiled Executables
++*.exe
+ 
+ # Compiled protocol buffers
+ *.pb.h
+@@ -22,6 +28,7 @@
+ 
+ # Compiled python
+ *.pyc
++*.pyd
+ 
+ # Compiled MATLAB
+ *.mex*
+@@ -97,3 +104,11 @@
+ LOG*
+ CURRENT
+ MANIFEST-*
++
++#Visual Studio files
++*.user
++*.suo
++*.sdf
++*.opensdf
++*.pdb
++*.props
+\ No newline at end of file
+diff -ur --strip-trailing-cr caffe-1.0/include/caffe/common.hpp caffe/include/caffe/common.hpp
+--- include/caffe/common.hpp	2017-04-15 19:17:48.000000000 +0300
++++ include/caffe/common.hpp	2021-03-15 15:08:50.272657800 +0300
+@@ -16,6 +16,9 @@
+ #include <utility>  // pair
+ #include <vector>
+ 
++#ifdef CMAKE_WINDOWS_BUILD
++  #include "caffe/export.hpp"
++#endif
+ #include "caffe/util/device_alternate.hpp"
+ 
+ // Convert macro to string
+diff -ur --strip-trailing-cr caffe-1.0/include/caffe/layer_factory.hpp caffe/include/caffe/layer_factory.hpp
+--- include/caffe/layer_factory.hpp	2017-04-15 19:17:48.000000000 +0300
++++ include/caffe/layer_factory.hpp	2021-03-15 15:08:50.275649400 +0300
+@@ -58,72 +58,31 @@
+   typedef shared_ptr<Layer<Dtype> > (*Creator)(const LayerParameter&);
+   typedef std::map<string, Creator> CreatorRegistry;
+ 
+-  static CreatorRegistry& Registry() {
+-    static CreatorRegistry* g_registry_ = new CreatorRegistry();
+-    return *g_registry_;
+-  }
++  static CreatorRegistry& Registry();
+ 
+   // Adds a creator.
+-  static void AddCreator(const string& type, Creator creator) {
+-    CreatorRegistry& registry = Registry();
+-    CHECK_EQ(registry.count(type), 0)
+-        << "Layer type " << type << " already registered.";
+-    registry[type] = creator;
+-  }
++  static void AddCreator(const string& type, Creator creator);
+ 
+   // Get a layer using a LayerParameter.
+-  static shared_ptr<Layer<Dtype> > CreateLayer(const LayerParameter& param) {
+-    if (Caffe::root_solver()) {
+-      LOG(INFO) << "Creating layer " << param.name();
+-    }
+-    const string& type = param.type();
+-    CreatorRegistry& registry = Registry();
+-    CHECK_EQ(registry.count(type), 1) << "Unknown layer type: " << type
+-        << " (known types: " << LayerTypeListString() << ")";
+-    return registry[type](param);
+-  }
+-
+-  static vector<string> LayerTypeList() {
+-    CreatorRegistry& registry = Registry();
+-    vector<string> layer_types;
+-    for (typename CreatorRegistry::iterator iter = registry.begin();
+-         iter != registry.end(); ++iter) {
+-      layer_types.push_back(iter->first);
+-    }
+-    return layer_types;
+-  }
++  static shared_ptr<Layer<Dtype> > CreateLayer(const LayerParameter& param);
++
++  static vector<string> LayerTypeList();
+ 
+  private:
+   // Layer registry should never be instantiated - everything is done with its
+   // static variables.
+-  LayerRegistry() {}
++  LayerRegistry();
+ 
+-  static string LayerTypeListString() {
+-    vector<string> layer_types = LayerTypeList();
+-    string layer_types_str;
+-    for (vector<string>::iterator iter = layer_types.begin();
+-         iter != layer_types.end(); ++iter) {
+-      if (iter != layer_types.begin()) {
+-        layer_types_str += ", ";
+-      }
+-      layer_types_str += *iter;
+-    }
+-    return layer_types_str;
+-  }
++  static string LayerTypeListString();
+ };
+ 
+-
+ template <typename Dtype>
+ class LayerRegisterer {
+  public:
+   LayerRegisterer(const string& type,
+-                  shared_ptr<Layer<Dtype> > (*creator)(const LayerParameter&)) {
+-    // LOG(INFO) << "Registering layer type: " << type;
+-    LayerRegistry<Dtype>::AddCreator(type, creator);
+-  }
++                  shared_ptr<Layer<Dtype> > (*creator)(const LayerParameter&));
+ };
+ 
+-
+ #define REGISTER_LAYER_CREATOR(type, creator)                                  \
+   static LayerRegisterer<float> g_creator_f_##type(#type, creator<float>);     \
+   static LayerRegisterer<double> g_creator_d_##type(#type, creator<double>)    \
+diff -ur --strip-trailing-cr caffe-1.0/include/caffe/layers/crop_layer.hpp caffe/include/caffe/layers/crop_layer.hpp
+--- include/caffe/layers/crop_layer.hpp	2017-04-15 19:17:48.000000000 +0300
++++ include/caffe/layers/crop_layer.hpp	2021-03-15 15:08:50.281634100 +0300
+@@ -41,13 +41,15 @@
+   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+ 
+-  vector<int> offsets;
++  Blob<int> offsets;
++  Blob<int> src_strides_;
++  Blob<int> dest_strides_;
+ 
+  private:
+   // Recursive copy function.
+   void crop_copy(const vector<Blob<Dtype>*>& bottom,
+                const vector<Blob<Dtype>*>& top,
+-               const vector<int>& offsets,
++               const int* offsets,
+                vector<int> indices,
+                int cur_dim,
+                const Dtype* src_data,
+diff -ur --strip-trailing-cr caffe-1.0/include/caffe/solver_factory.hpp caffe/include/caffe/solver_factory.hpp
+--- include/caffe/solver_factory.hpp	2017-04-15 19:17:48.000000000 +0300
++++ include/caffe/solver_factory.hpp	2021-03-15 15:08:50.307563300 +0300
+@@ -56,69 +56,31 @@
+   typedef Solver<Dtype>* (*Creator)(const SolverParameter&);
+   typedef std::map<string, Creator> CreatorRegistry;
+ 
+-  static CreatorRegistry& Registry() {
+-    static CreatorRegistry* g_registry_ = new CreatorRegistry();
+-    return *g_registry_;
+-  }
++  static CreatorRegistry& Registry();
+ 
+   // Adds a creator.
+-  static void AddCreator(const string& type, Creator creator) {
+-    CreatorRegistry& registry = Registry();
+-    CHECK_EQ(registry.count(type), 0)
+-        << "Solver type " << type << " already registered.";
+-    registry[type] = creator;
+-  }
++  static void AddCreator(const string& type, Creator creator);
+ 
+   // Get a solver using a SolverParameter.
+-  static Solver<Dtype>* CreateSolver(const SolverParameter& param) {
+-    const string& type = param.type();
+-    CreatorRegistry& registry = Registry();
+-    CHECK_EQ(registry.count(type), 1) << "Unknown solver type: " << type
+-        << " (known types: " << SolverTypeListString() << ")";
+-    return registry[type](param);
+-  }
+-
+-  static vector<string> SolverTypeList() {
+-    CreatorRegistry& registry = Registry();
+-    vector<string> solver_types;
+-    for (typename CreatorRegistry::iterator iter = registry.begin();
+-         iter != registry.end(); ++iter) {
+-      solver_types.push_back(iter->first);
+-    }
+-    return solver_types;
+-  }
++  static Solver<Dtype>* CreateSolver(const SolverParameter& param);
++
++  static vector<string> SolverTypeList();
+ 
+  private:
+   // Solver registry should never be instantiated - everything is done with its
+   // static variables.
+-  SolverRegistry() {}
++  SolverRegistry();  // {}
+ 
+-  static string SolverTypeListString() {
+-    vector<string> solver_types = SolverTypeList();
+-    string solver_types_str;
+-    for (vector<string>::iterator iter = solver_types.begin();
+-         iter != solver_types.end(); ++iter) {
+-      if (iter != solver_types.begin()) {
+-        solver_types_str += ", ";
+-      }
+-      solver_types_str += *iter;
+-    }
+-    return solver_types_str;
+-  }
++  static string SolverTypeListString();
+ };
+ 
+-
+ template <typename Dtype>
+ class SolverRegisterer {
+  public:
+   SolverRegisterer(const string& type,
+-      Solver<Dtype>* (*creator)(const SolverParameter&)) {
+-    // LOG(INFO) << "Registering solver type: " << type;
+-    SolverRegistry<Dtype>::AddCreator(type, creator);
+-  }
++                   Solver<Dtype>* (*creator)(const SolverParameter&));
+ };
+ 
+-
+ #define REGISTER_SOLVER_CREATOR(type, creator)                                 \
+   static SolverRegisterer<float> g_creator_f_##type(#type, creator<float>);    \
+   static SolverRegisterer<double> g_creator_d_##type(#type, creator<double>)   \
+diff -ur --strip-trailing-cr caffe-1.0/include/caffe/test/test_caffe_main.hpp caffe/include/caffe/test/test_caffe_main.hpp
+--- include/caffe/test/test_caffe_main.hpp	2017-04-15 19:17:48.000000000 +0300
++++ include/caffe/test/test_caffe_main.hpp	2021-03-15 15:08:50.308561200 +0300
+@@ -10,6 +10,7 @@
+ #include <cstdlib>
+ 
+ #include "caffe/common.hpp"
++#include "caffe/util/io.hpp"
+ 
+ using std::cout;
+ using std::endl;
+@@ -34,7 +35,8 @@
+   MultiDeviceTest() {
+     Caffe::set_mode(TypeParam::device);
+   }
+-  virtual ~MultiDeviceTest() {}
++  // Caffe tests may create some temporary files, here we will do the cleanup.
++  virtual ~MultiDeviceTest() { RemoveCaffeTempDir(); }
+ };
+ 
+ typedef ::testing::Types<float, double> TestDtypes;
+diff -ur --strip-trailing-cr caffe-1.0/include/caffe/util/cudnn.hpp caffe/include/caffe/util/cudnn.hpp
+--- include/caffe/util/cudnn.hpp	2017-04-15 19:17:48.000000000 +0300
++++ include/caffe/util/cudnn.hpp	2021-03-15 15:08:50.310557500 +0300
+@@ -17,6 +17,7 @@
+       << cudnnGetErrorString(status); \
+   } while (0)
+ 
++#if !defined (_MSC_VER)
+ inline const char* cudnnGetErrorString(cudnnStatus_t status) {
+   switch (status) {
+     case CUDNN_STATUS_SUCCESS:
+@@ -48,6 +49,7 @@
+   }
+   return "Unknown cudnn status";
+ }
++#endif
+ 
+ namespace caffe {
+ 
+diff -ur --strip-trailing-cr caffe-1.0/include/caffe/util/io.hpp caffe/include/caffe/util/io.hpp
+--- include/caffe/util/io.hpp	2017-04-15 19:17:48.000000000 +0300
++++ include/caffe/util/io.hpp	2021-03-15 15:08:50.315544100 +0300
+@@ -23,8 +23,12 @@
+ 
+ inline void MakeTempDir(string* temp_dirname) {
+   temp_dirname->clear();
+-  const path& model =
+-    boost::filesystem::temp_directory_path()/"caffe_test.%%%%-%%%%";
++  // Place all temp directories under temp_root, to be able to delete all of
++  // them at once, without knowing their name.
++  const path& temp_root =
++    boost::filesystem::temp_directory_path() / "caffe_test";
++  boost::filesystem::create_directory(temp_root);
++  const path& model = temp_root / "%%%%-%%%%";
+   for ( int i = 0; i < CAFFE_TMP_DIR_RETRIES; i++ ) {
+     const path& dir = boost::filesystem::unique_path(model).string();
+     bool done = boost::filesystem::create_directory(dir);
+@@ -37,7 +41,7 @@
+ }
+ 
+ inline void MakeTempFilename(string* temp_filename) {
+-  static path temp_files_subpath;
++  path temp_files_subpath;
+   static uint64_t next_temp_file = 0;
+   temp_filename->clear();
+   if ( temp_files_subpath.empty() ) {
+@@ -49,6 +53,21 @@
+     (temp_files_subpath/caffe::format_int(next_temp_file++, 9)).string();
+ }
+ 
++#ifdef _MSC_VER
++
++inline void RemoveCaffeTempDir() {
++  boost::system::error_code err;
++  boost::filesystem::remove_all(
++    boost::filesystem::temp_directory_path() / "caffe_test", err);
++}
++
++#else
++
++inline void RemoveCaffeTempDir() {
++}
++
++#endif
++
+ bool ReadProtoFromTextFile(const char* filename, Message* proto);
+ 
+ inline bool ReadProtoFromTextFile(const string& filename, Message* proto) {
+diff -ur --strip-trailing-cr caffe-1.0/matlab/+caffe/Net.m caffe/matlab/+caffe/Net.m
+--- matlab/+caffe/Net.m	2017-04-15 19:17:48.000000000 +0300
++++ matlab/+caffe/Net.m	2021-03-15 15:08:50.320528800 +0300
+@@ -69,7 +69,9 @@
+       self.blob_names = self.attributes.blob_names;
+     end
+     function delete (self)
+-      caffe_('delete_net', self.hNet_self);
++      if ~isempty(self.hNet_self)
++        caffe_('delete_net', self.hNet_self);
++      end
+     end
+     function layer = layers(self, layer_name)
+       CHECK(ischar(layer_name), 'layer_name must be a string');
+diff -ur --strip-trailing-cr caffe-1.0/matlab/+caffe/private/caffe_.cpp caffe/matlab/+caffe/private/caffe_.cpp
+--- matlab/+caffe/private/caffe_.cpp	2017-04-15 19:17:48.000000000 +0300
++++ matlab/+caffe/private/caffe_.cpp	2021-03-15 15:08:50.323521000 +0300
+@@ -45,7 +45,14 @@
+ static vector<shared_ptr<Solver<float> > > solvers_;
+ static vector<shared_ptr<Net<float> > > nets_;
+ // init_key is generated at the beginning and every time you call reset
++#ifndef _MSC_VER  // We are not using MSVC.
+ static double init_key = static_cast<double>(caffe_rng_rand());
++#else  // We are using MSVC.
++// The original statement may cause MATLAB halt on Windows when cuBLAS is used.
++// Using a negative number as a flag instead of calling caffe_rng_rand().
++// init_key will be generated in entry function: mexFunction().
++static double init_key = -1;
++#endif  // !_MSC_VER
+ 
+ /** -----------------------------------------------------------------
+  ** data conversion functions
+@@ -583,6 +590,10 @@
+  **/
+ // Usage: caffe_(api_command, arg1, arg2, ...)
+ void mexFunction(MEX_ARGS) {
++#ifdef _MSC_VER
++  if (init_key == -1)
++    init_key = static_cast<double>(caffe_rng_rand());
++#endif  // _MSC_VER
+   mexLock();  // Avoid clearing the mex file.
+   mxCHECK(nrhs > 0, "Usage: caffe_(api_command, arg1, arg2, ...)");
+   // Handle input command
+diff -ur --strip-trailing-cr caffe-1.0/matlab/+caffe/+test/test_solver.m caffe/matlab/+caffe/+test/test_solver.m
+--- matlab/+caffe/+test/test_solver.m	2017-04-15 19:17:48.000000000 +0300
++++ matlab/+caffe/+test/test_solver.m	2021-03-15 15:08:50.319531400 +0300
+@@ -13,7 +13,7 @@
+       
+       fid = fopen(solver_file, 'w');
+       fprintf(fid, [ ...
+-        'net: "'  model_file  '"\n' ...
++        'net: "'  strrep(model_file, '\', '/')  '"\n' ...
+         'test_iter: 10 test_interval: 10 base_lr: 0.01 momentum: 0.9\n' ...
+         'weight_decay: 0.0005 lr_policy: "inv" gamma: 0.0001 power: 0.75\n' ...
+         'display: 100 max_iter: 100 snapshot_after_train: false\n' ]);
+diff -ur --strip-trailing-cr caffe-1.0/matlab/CMakeLists.txt caffe/matlab/CMakeLists.txt
+--- matlab/CMakeLists.txt	2017-04-15 19:17:48.000000000 +0300
++++ matlab/CMakeLists.txt	2021-03-15 15:08:50.326513500 +0300
+@@ -1,5 +1,5 @@
+ # Builds Matlab (or Octave) interface. In case of Matlab caffe must be
+-# compield as shared library. Octave can link static or shared caffe library
++# compiled as shared library. Octave can link static or shared caffe library
+ # To install octave run: sudo apt-get install liboctave-dev
+ 
+ if(NOT BUILD_matlab)
+@@ -16,26 +16,34 @@
+   return()
+ endif()
+ 
+-if(NOT BUILD_SHARED_LIBS AND build_using MATCHES Matlab)
+-  message(FATAL_ERROR "Matlab MEX interface (with default mex options file) can only be built if caffe is compiled as shared library. Please enable 'BUILD_SHARED_LIBS' in CMake. Aternativelly you can switch to Octave compiler.")
++if(NOT MSVC AND NOT BUILD_SHARED_LIBS AND build_using MATCHES Matlab)
++  message(FATAL_ERROR "Matlab MEX interface (with default mex options file) can only be built if caffe is compiled as shared library on UNIX systems. Please enable 'BUILD_SHARED_LIBS' in CMake. Alternatively you can switch to Octave compiler.")
+ endif()
+ 
++if(NOT MSVC)
+ # helper function to set proper mex file extension
+-function(caffe_fetch_and_set_proper_mexext mexfile_variable)
+-  execute_process(COMMAND ${Matlab_mexext} OUTPUT_STRIP_TRAILING_WHITESPACE RESULT_VARIABLE res OUTPUT_VARIABLE ext)
+-  if(res MATCHES 0)
+-    get_filename_component(folder  ${${mexfile_variable}} PATH)
+-    get_filename_component(name_we ${${mexfile_variable}} NAME_WE)
+-    set(${mexfile_variable} ${folder}/${name_we}.${ext} PARENT_SCOPE)
+-  endif()
+-endfunction()
++  function(caffe_fetch_and_set_proper_mexext mexfile_variable)
++    execute_process(COMMAND ${Matlab_mexext} OUTPUT_STRIP_TRAILING_WHITESPACE RESULT_VARIABLE res OUTPUT_VARIABLE ext)
++    if(res MATCHES 0)
++      get_filename_component(folder  ${${mexfile_variable}} PATH)
++      get_filename_component(name_we ${${mexfile_variable}} NAME_WE)
++      set(${mexfile_variable} ${folder}/${name_we}.${ext} PARENT_SCOPE)
++    endif()
++  endfunction()
++endif()
+ 
+ # global settings
+ file(GLOB Matlab_srcs +caffe/private/caffe_.cpp)
+-set(Matlab_caffe_mex ${PROJECT_SOURCE_DIR}/matlab/+caffe/private/caffe_.mex)
++if(MSVC)
++  set(Matlab_caffe_mex ${PROJECT_SOURCE_DIR}/matlab/+caffe/private/caffe_.mexw64)
++else()
++  set(Matlab_caffe_mex ${PROJECT_SOURCE_DIR}/matlab/+caffe/private/caffe_.mex)
++endif()
+ 
+ caffe_get_current_cflags(cflags)
+-caffe_parse_linker_libs(Caffe_LINKER_LIBS folders libflags macos_frameworks)
++if(NOT MSVC)
++  caffe_parse_linker_libs(Caffe_LINKER_LIBS folders libflags macos_frameworks)
++endif()
+ set(folders $<TARGET_LINKER_FILE_DIR:caffe> ${folders})
+ 
+ # prepare linker flag lists
+@@ -43,14 +51,28 @@
+ string(REPLACE ";" ":"  rpath_folders   "${folders}")
+ 
+ if(build_using MATCHES "Matlab")
+-  set(libflags -lcaffe${Caffe_POSTFIX} ${libflags}) # Matlab R2014a complans for -Wl,--whole-archive
+-
+-  caffe_fetch_and_set_proper_mexext(Matlab_caffe_mex)
+-  add_custom_command(OUTPUT ${Matlab_caffe_mex} COMMAND ${Matlab_mex}
+-      ARGS -output ${Matlab_caffe_mex} ${Matlab_srcs} ${cflags} ${link_folders} ${libflags}
+-      DEPENDS caffe COMMENT "Building Matlab interface: ${Matlab_caffe_mex}" VERBATIM)
+-  add_custom_target(matlab ALL DEPENDS ${Matlab_caffe_mex} SOURCES ${Matlab_srcs})
+-
++  if(MSVC)
++    matlab_add_mex(NAME matlab
++                   SRC ${Matlab_srcs} # maybe you need to add some other sources
++                   OUTPUT_NAME caffe_ # change the output name to _caffe.mexw64
++                   LINK_TO caffe # cmake will take care of forwarding the correct transitive library dependencies to your mex file
++                   )
++    # output the target in the source tree as in the original version.
++    set_target_properties(matlab PROPERTIES
++                          RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/matlab/+caffe/private
++                          )
++    if(COPY_PREREQUISITES)
++      caffe_copy_prerequisites(matlab DESTINATION ${PROJECT_SOURCE_DIR}/matlab/+caffe/private USE_HARD_LINKS)
++    endif()
++  else()
++    set(libflags -lcaffe${Caffe_POSTFIX} ${libflags}) # Matlab R2014a complans for -Wl,--whole-archive
++
++    caffe_fetch_and_set_proper_mexext(Matlab_caffe_mex)
++    add_custom_command(OUTPUT ${Matlab_caffe_mex} COMMAND ${Matlab_mex}
++        ARGS -output ${Matlab_caffe_mex} ${Matlab_srcs} ${cflags} ${link_folders} ${libflags}
++        DEPENDS caffe COMMENT "Building Matlab interface: ${Matlab_caffe_mex}" VERBATIM)
++    add_custom_target(matlab ALL DEPENDS ${Matlab_caffe_mex} SOURCES ${Matlab_srcs})
++  endif()
+ elseif(build_using MATCHES "Octave")
+ 
+   if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+@@ -67,6 +89,16 @@
+ endif()
+ 
+ # ---[ Install
+-file(GLOB mfiles caffe/*.m)
+-install(FILES ${mfiles} ${Matlab_caffe_mex} DESTINATION matlab)
++if(MSVC)
++  install(DIRECTORY ${PROJECT_SOURCE_DIR}/matlab DESTINATION .
++          PATTERN CMakeLists.txt EXCLUDE
++          PATTERN .gitignore EXCLUDE)
++else()
++  file(GLOB mfiles caffe/*.m)
++  install(FILES ${mfiles} ${Matlab_caffe_mex} DESTINATION matlab)
++endif()
++
++if(MSVC AND INSTALL_PREREQUISITES)
++  caffe_install_prerequisites(matlab DESTINATION matlab/+caffe/private)
++endif()
+ 
+diff -ur --strip-trailing-cr caffe-1.0/python/caffe/_caffe.cpp caffe/python/caffe/_caffe.cpp
+--- python/caffe/_caffe.cpp	2017-04-15 19:17:48.000000000 +0300
++++ python/caffe/_caffe.cpp	2021-03-15 15:08:50.338481500 +0300
+@@ -1,5 +1,3 @@
+-#include <Python.h>  // NOLINT(build/include_alpha)
+-
+ // Produce deprecation warnings (needs to come before arrayobject.h inclusion).
+ #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
+ 
+@@ -39,6 +37,41 @@
+   } \
+ } while (0)
+ 
++#if defined(_MSC_VER) && (_MSC_FULL_VER >= 190024210)
++// Workaround for VS 2015 Update 3 which breaks boost python
++// See: http://stackoverflow.com/questions/38261530/unresolved-external-symbols-since-visual-studio-2015-update-3-boost-python-link
++// and https://msdn.microsoft.com/vs-knownissues/vs2015-update3
++#define BP_GET_POINTER(cls) \
++namespace boost { \
++template <> \
++const volatile caffe::cls * \
++get_pointer(const volatile caffe::cls *c) { \
++    return c; \
++} \
++}
++
++#define BP_GET_POINTER_T(cls, dtype) BP_GET_POINTER(cls<dtype>)
++
++// forward declare the NCCL class
++// in case we are not using NCCL
++namespace caffe {
++template <typename Dtype> class NCCL;
++}
++
++BP_GET_POINTER_T(Net, float);
++BP_GET_POINTER_T(Layer, float);
++BP_GET_POINTER_T(Solver, float);
++BP_GET_POINTER_T(SGDSolver, float);
++BP_GET_POINTER_T(NesterovSolver, float);
++BP_GET_POINTER_T(AdaGradSolver, float);
++BP_GET_POINTER_T(RMSPropSolver, float);
++BP_GET_POINTER_T(AdaDeltaSolver, float);
++BP_GET_POINTER_T(AdamSolver, float);
++BP_GET_POINTER_T(NCCL, float);
++BP_GET_POINTER(Timer);
++
++#endif
++
+ namespace bp = boost::python;
+ 
+ namespace caffe {
+@@ -53,15 +86,18 @@
+ 
+ void InitLog() {
+   ::google::InitGoogleLogging("");
++#ifndef _MSC_VER
++  // this symbol is undefined on windows
+   ::google::InstallFailureSignalHandler();
++#endif  // _MSC_VER
+ }
+ void InitLogLevel(int level) {
+   FLAGS_minloglevel = level;
+   InitLog();
+ }
+-void InitLogLevelPipe(int level, bool stderr) {
++void InitLogLevelPipe(int level, bool std_err) {
+   FLAGS_minloglevel = level;
+-  FLAGS_logtostderr = stderr;
++  FLAGS_logtostderr = std_err;
+   InitLog();
+ }
+ void Log(const string& s) {
+diff -ur --strip-trailing-cr caffe-1.0/python/caffe/draw.py caffe/python/caffe/draw.py
+--- python/caffe/draw.py	2017-04-15 19:17:48.000000000 +0300
++++ python/caffe/draw.py	2021-03-15 15:08:50.340475500 +0300
+@@ -9,6 +9,7 @@
+     Caffe.
+ """
+ 
++import os
+ from caffe.proto import caffe_pb2
+ 
+ """
+@@ -21,6 +22,35 @@
+ except ImportError:
+     import pydot
+ 
++
++if os.name == 'nt':
++    # Workaround to find graphviz executables
++    # with graphviz conda package under windows
++
++    # Monkeypatch the pydot package
++    pydot_find_graphviz = pydot.graphviz.find_graphviz
++
++    def resolve_graphviz_executables():
++        """
++        Resolve the graphviz executables by adding a `graphviz` suffix
++        to folders located on path
++        """
++        # first check if we can find the executables the normal way
++        progs = pydot_find_graphviz()
++        if not progs:
++            directories = os.environ['PATH'].split(';')
++            suffix = 'graphviz'
++            progs = {}
++            for directory in directories:
++                for exe in ['dot', 'twopi', 'neato', 'circo', 'fdp']:
++                    full_path = os.path.join(directory, suffix,
++                                             '{}.exe'.format(exe))
++                    if os.path.exists(full_path):
++                        progs[exe] = full_path
++        return progs
++
++    pydot.graphviz.find_graphviz = resolve_graphviz_executables
++
+ # Internal layer and blob styles.
+ LAYER_STYLE_DEFAULT = {'shape': 'record',
+                        'fillcolor': '#6495ED',
+diff -ur --strip-trailing-cr caffe-1.0/python/caffe/test/test_python_layer.py caffe/python/caffe/test/test_python_layer.py
+--- python/caffe/test/test_python_layer.py	2017-04-15 19:17:48.000000000 +0300
++++ python/caffe/test/test_python_layer.py	2021-03-15 15:08:50.345462600 +0300
+@@ -151,6 +151,10 @@
+         self.assertEqual(layer.blobs[0].data[0], -1)
+         net.copy_from(caffemodel_file)
+         self.assertEqual(layer.blobs[0].data[0], 1)
++        if os.name == 'nt':
++        # On Windows, attempting to remove a file that is in use
++        # causes an exception to be raised."
++          os.close(h)
+         os.remove(caffemodel_file)
+         
+         # Test weight sharing
+diff -ur --strip-trailing-cr caffe-1.0/python/caffe/test/test_solver.py caffe/python/caffe/test/test_solver.py
+--- python/caffe/test/test_solver.py	2017-04-15 19:17:48.000000000 +0300
++++ python/caffe/test/test_solver.py	2021-03-15 15:08:50.345462600 +0300
+@@ -13,7 +13,10 @@
+         self.num_output = 13
+         net_f = simple_net_file(self.num_output)
+         f = tempfile.NamedTemporaryFile(mode='w+', delete=False)
+-        f.write("""net: '""" + net_f + """'
++        net_f_mod = net_f
++        if os.name == 'nt':
++          net_f_mod = net_f_mod.replace("\\", "/")
++        f.write("""net: '""" + net_f_mod + """'
+         test_iter: 10 test_interval: 10 base_lr: 0.01 momentum: 0.9
+         weight_decay: 0.0005 lr_policy: 'inv' gamma: 0.0001 power: 0.75
+         display: 100 max_iter: 100 snapshot_after_train: false
+diff -ur --strip-trailing-cr caffe-1.0/python/CMakeLists.txt caffe/python/CMakeLists.txt
+--- python/CMakeLists.txt	2017-04-15 19:17:48.000000000 +0300
++++ python/CMakeLists.txt	2021-03-15 15:08:50.337484800 +0300
+@@ -5,9 +5,12 @@
+ 
+ file(GLOB_RECURSE python_srcs ${PROJECT_SOURCE_DIR}/python/*.cpp)
+ 
+-add_library(pycaffe SHARED ${python_srcs})
++add_library(pycaffe MODULE ${python_srcs})
+ caffe_default_properties(pycaffe)
+ set_target_properties(pycaffe PROPERTIES PREFIX "" OUTPUT_NAME "_caffe")
++if(MSVC)
++  set_target_properties(pycaffe PROPERTIES SUFFIX ".pyd")
++endif()
+ target_include_directories(pycaffe PUBLIC ${PYTHON_INCLUDE_DIRS} ${NUMPY_INCLUDE_DIR})
+ target_link_libraries(pycaffe PUBLIC ${Caffe_LINK} ${PYTHON_LIBRARIES})
+ 
+@@ -19,6 +22,17 @@
+                        COMMAND touch ${PROJECT_SOURCE_DIR}/python/caffe/proto/__init__.py
+                        COMMAND cp ${proto_gen_folder}/*.py ${PROJECT_SOURCE_DIR}/python/caffe/proto/
+                        COMMENT "Creating symlink ${__linkname} -> ${PROJECT_BINARY_DIR}/lib/_caffe${Caffe_POSTFIX}.so")
++elseif(WIN32)
++    add_custom_command(TARGET pycaffe POST_BUILD
++                       COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:pycaffe> ${PROJECT_SOURCE_DIR}/python/caffe
++                       COMMAND ${CMAKE_COMMAND} -E make_directory ${PROJECT_SOURCE_DIR}/python/caffe/proto
++                       COMMAND ${CMAKE_COMMAND} -E touch ${PROJECT_SOURCE_DIR}/python/caffe/proto/__init__.py
++                       COMMAND (robocopy  "\"${proto_gen_folder}\" \"${PROJECT_SOURCE_DIR}/python/caffe/proto\" *.py") ^& IF %ERRORLEVEL% LEQ 4 set ERRORLEVEL=0
++                       COMMENT "Creating symlink ${__linkname} -> ${PROJECT_BINARY_DIR}/lib/_caffe.pyd")
++endif()
++
++if(MSVC AND COPY_PREREQUISITES)
++  caffe_copy_prerequisites(pycaffe DESTINATION ${PROJECT_SOURCE_DIR}/python/caffe USE_HARD_LINKS)
+ endif()
+ 
+ # ---[ Install
+@@ -38,3 +52,8 @@
+ # _caffe.so
+ install(TARGETS pycaffe  DESTINATION python/caffe)
+ 
++if(MSVC AND INSTALL_PREREQUISITES)
++  caffe_install_prerequisites(pycaffe DESTINATION python/caffe)
++endif()
++
++
+diff -ur --strip-trailing-cr caffe-1.0/README.md caffe/README.md
+--- README.md	2017-04-15 19:17:48.000000000 +0300
++++ README.md	2021-03-15 15:08:50.141575600 +0300
+@@ -1,37 +1,140 @@
+-# Caffe
++# Windows Caffe
+ 
+-[![Build Status](https://travis-ci.org/BVLC/caffe.svg?branch=master)](https://travis-ci.org/BVLC/caffe)
+-[![License](https://img.shields.io/badge/license-BSD-blue.svg)](LICENSE)
++**This is an experimental, community based branch led by Guillaume Dumont (@willyd). It is a work-in-progress.**
+ 
+-Caffe is a deep learning framework made with expression, speed, and modularity in mind.
+-It is developed by Berkeley AI Research ([BAIR](http://bair.berkeley.edu))/The Berkeley Vision and Learning Center (BVLC) and community contributors.
++This branch of Caffe ports the framework to Windows.
+ 
+-Check out the [project site](http://caffe.berkeleyvision.org) for all the details like
++[![Travis Build Status](https://api.travis-ci.org/BVLC/caffe.svg?branch=windows)](https://travis-ci.org/BVLC/caffe) Travis (Linux build)
+ 
+-- [DIY Deep Learning for Vision with Caffe](https://docs.google.com/presentation/d/1UeKXVgRvvxg9OUdh_UiC5G71UMscNPlvArsWER41PsU/edit#slide=id.p)
+-- [Tutorial Documentation](http://caffe.berkeleyvision.org/tutorial/)
+-- [BAIR reference models](http://caffe.berkeleyvision.org/model_zoo.html) and the [community model zoo](https://github.com/BVLC/caffe/wiki/Model-Zoo)
+-- [Installation instructions](http://caffe.berkeleyvision.org/installation.html)
++[![Build status](https://ci.appveyor.com/api/projects/status/ew7cl2k1qfsnyql4/branch/windows?svg=true)](https://ci.appveyor.com/project/BVLC/caffe/branch/windows) AppVeyor (Windows build)
+ 
+-and step-by-step examples.
++## Prebuilt binaries
+ 
+-[![Join the chat at https://gitter.im/BVLC/caffe](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/BVLC/caffe?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
++Prebuilt binaries can be downloaded from the latest CI build on appveyor for the following configurations:
+ 
+-Please join the [caffe-users group](https://groups.google.com/forum/#!forum/caffe-users) or [gitter chat](https://gitter.im/BVLC/caffe) to ask questions and talk about methods and models.
+-Framework development discussions and thorough bug reports are collected on [Issues](https://github.com/BVLC/caffe/issues).
++- Visual Studio 2015, CPU only, Python 3.5: [Caffe Release](https://ci.appveyor.com/api/projects/BVLC/caffe/artifacts/build/caffe.zip?branch=windows&job=Environment%3A%20MSVC_VERSION%3D14%2C%20WITH_NINJA%3D0%2C%20CMAKE_CONFIG%3DRelease%2C%20CMAKE_BUILD_SHARED_LIBS%3D0%2C%20PYTHON_VERSION%3D3%2C%20WITH_CUDA%3D0), ~~[Caffe Debug](https://ci.appveyor.com/api/projects/BVLC/caffe/artifacts/build/caffe.zip?branch=windows&job=Environment%3A%20MSVC_VERSION%3D14%2C%20WITH_NINJA%3D0%2C%20CMAKE_CONFIG%3DDebug%2C%20CMAKE_BUILD_SHARED_LIBS%3D0%2C%20PYTHON_VERSION%3D3%2C%20WITH_CUDA%3D0)~~
+ 
+-Happy brewing!
++- Visual Studio 2015, CUDA 8.0, Python 3.5: [Caffe Release](https://ci.appveyor.com/api/projects/BVLC/caffe/artifacts/build/caffe.zip?branch=windows&job=Environment%3A%20MSVC_VERSION%3D14%2C%20WITH_NINJA%3D1%2C%20CMAKE_CONFIG%3DRelease%2C%20CMAKE_BUILD_SHARED_LIBS%3D0%2C%20PYTHON_VERSION%3D3%2C%20WITH_CUDA%3D1)
+ 
+-## License and Citation
++- Visual Studio 2015, CPU only, Python 2.7: [Caffe Release](https://ci.appveyor.com/api/projects/BVLC/caffe/artifacts/build/caffe.zip?branch=windows&job=Environment%3A%20MSVC_VERSION%3D14%2C%20WITH_NINJA%3D0%2C%20CMAKE_CONFIG%3DRelease%2C%20CMAKE_BUILD_SHARED_LIBS%3D0%2C%20PYTHON_VERSION%3D2%2C%20WITH_CUDA%3D0), [Caffe Debug](https://ci.appveyor.com/api/projects/BVLC/caffe/artifacts/build/caffe.zip?branch=windows&job=Environment%3A%20MSVC_VERSION%3D14%2C%20WITH_NINJA%3D0%2C%20CMAKE_CONFIG%3DDebug%2C%20CMAKE_BUILD_SHARED_LIBS%3D0%2C%20PYTHON_VERSION%3D2%2C%20WITH_CUDA%3D0)
+ 
+-Caffe is released under the [BSD 2-Clause license](https://github.com/BVLC/caffe/blob/master/LICENSE).
+-The BAIR/BVLC reference models are released for unrestricted use.
++- Visual Studio 2015,CUDA 8.0, Python 2.7: [Caffe Release](https://ci.appveyor.com/api/projects/BVLC/caffe/artifacts/build/caffe.zip?branch=windows&job=Environment%3A%20MSVC_VERSION%3D14%2C%20WITH_NINJA%3D1%2C%20CMAKE_CONFIG%3DRelease%2C%20CMAKE_BUILD_SHARED_LIBS%3D0%2C%20PYTHON_VERSION%3D2%2C%20WITH_CUDA%3D1)
+ 
+-Please cite Caffe in your publications if it helps your research:
++- Visual Studio 2013, CPU only, Python 2.7: [Caffe Release](https://ci.appveyor.com/api/projects/BVLC/caffe/artifacts/build/caffe.zip?branch=windows&job=Environment%3A%20MSVC_VERSION%3D12%2C%20WITH_NINJA%3D0%2C%20CMAKE_CONFIG%3DRelease%2C%20CMAKE_BUILD_SHARED_LIBS%3D0%2C%20PYTHON_VERSION%3D2%2C%20WITH_CUDA%3D0), [Caffe Debug](https://ci.appveyor.com/api/projects/BVLC/caffe/artifacts/build/caffe.zip?branch=windows&job=Environment%3A%20MSVC_VERSION%3D12%2C%20WITH_NINJA%3D0%2C%20CMAKE_CONFIG%3DDebug%2C%20CMAKE_BUILD_SHARED_LIBS%3D0%2C%20PYTHON_VERSION%3D2%2C%20WITH_CUDA%3D0)
+ 
+-    @article{jia2014caffe,
+-      Author = {Jia, Yangqing and Shelhamer, Evan and Donahue, Jeff and Karayev, Sergey and Long, Jonathan and Girshick, Ross and Guadarrama, Sergio and Darrell, Trevor},
+-      Journal = {arXiv preprint arXiv:1408.5093},
+-      Title = {Caffe: Convolutional Architecture for Fast Feature Embedding},
+-      Year = {2014}
+-    }
++
++## Windows Setup
++
++### Requirements
++
++ - Visual Studio 2013 or 2015
++     - Technically only the VS C/C++ compiler is required (cl.exe)
++ - [CMake](https://cmake.org/) 3.4 or higher (Visual Studio and [Ninja](https://ninja-build.org/) generators are supported)
++
++### Optional Dependencies
++
++ - Python for the pycaffe interface. Anaconda Python 2.7 or 3.5 x64 (or Miniconda)
++ - Matlab for the matcaffe interface.
++ - CUDA 7.5 or 8.0 (use CUDA 8 if using Visual Studio 2015)
++ - cuDNN v5
++
++ We assume that `cmake.exe` and `python.exe` are on your `PATH`.
++
++### Configuring and Building Caffe
++
++The fastest method to get started with caffe on Windows is by executing the following commands in a `cmd` prompt (we use `C:\Projects` as a root folder for the remainder of the instructions):
++```cmd
++C:\Projects> git clone https://github.com/BVLC/caffe.git
++C:\Projects> cd caffe
++C:\Projects\caffe> git checkout windows
++:: Edit any of the options inside build_win.cmd to suit your needs
++C:\Projects\caffe> scripts\build_win.cmd
++```
++The `build_win.cmd` script will download the dependencies, create the Visual Studio project files (or the ninja build files) and build the Release configuration. By default all the required DLLs will be copied (or hard linked when possible) next to the consuming binaries. If you wish to disable this option, you can by changing the command line option `-DCOPY_PREREQUISITES=0`. The prebuilt libraries also provide a `prependpath.bat` batch script that can temporarily modify your `PATH` environment variable to make the required DLLs available.
++
++If you have GCC installed (e.g. through MinGW), then Ninja will detect it before detecting the Visual Studio compiler, causing errors.  In this case you have several options:
++
++- [Pass CMake the path](https://cmake.org/Wiki/CMake_FAQ#How_do_I_use_a_different_compiler.3F) (Set `CMAKE_C_COMPILER=your/path/to/cl.exe` and `CMAKE_CXX_COMPILER=your/path/to/cl.exe`)
++- or Use the Visual Studio Generator by setting `WITH_NINJA` to 0 (This is slower, but may work even if Ninja is failing.)
++- or uninstall your copy of GCC 
++
++The path to cl.exe is usually something like 
++`"C:/Program Files (x86)/Microsoft Visual Studio 14.0/VC/bin/your_processor_architecture/cl.exe".`
++If you don't want to install Visual Studio, Microsoft's C/C++ compiler [can be obtained here](http://landinghub.visualstudio.com/visual-cpp-build-tools). 
++
++Below is a more complete description of some of the steps involved in building caffe.
++
++### Install the caffe dependencies
++
++By default CMake will download and extract prebuilt dependencies for your compiler and python version. It will create a folder called `libraries` containing all the required dependencies inside your build folder. Alternatively you can build them yourself by following the instructions in the [caffe-builder](https://github.com/willyd/caffe-builder) [README](https://github.com/willyd/caffe-builder/blob/master/README.md).
++
++### Use cuDNN
++
++To use cuDNN the easiest way is to copy the content of the `cuda` folder into your CUDA toolkit installation directory. For example if you installed CUDA 8.0 and downloaded cudnn-8.0-windows10-x64-v5.1.zip you should copy the content of the `cuda` directory to `C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0`. Alternatively, you can define the CUDNN_ROOT cache variable to point to where you unpacked the cuDNN files e.g. `C:/Projects/caffe/cudnn-8.0-windows10-x64-v5.1/cuda`. For example the command in [scripts/build_win.cmd](scripts/build_win.cmd) would become:
++```
++cmake -G"!CMAKE_GENERATOR!" ^
++      -DBLAS=Open ^
++      -DCMAKE_BUILD_TYPE:STRING=%CMAKE_CONFIG% ^
++      -DBUILD_SHARED_LIBS:BOOL=%CMAKE_BUILD_SHARED_LIBS% ^
++      -DBUILD_python:BOOL=%BUILD_PYTHON% ^
++      -DBUILD_python_layer:BOOL=%BUILD_PYTHON_LAYER% ^
++      -DBUILD_matlab:BOOL=%BUILD_MATLAB% ^
++      -DCPU_ONLY:BOOL=%CPU_ONLY% ^
++      -DCUDNN_ROOT=C:/Projects/caffe/cudnn-8.0-windows10-x64-v5.1/cuda ^
++      -C "%cd%\libraries\caffe-builder-config.cmake" ^
++      "%~dp0\.."
++```
++
++Alternatively, you can open `cmake-gui.exe` and set the variable from there and click `Generate`.
++
++### Building only for CPU
++
++If CUDA is not installed Caffe will default to a CPU_ONLY build. If you have CUDA installed but want a CPU only build you may use the CMake option `-DCPU_ONLY=1`.
++
++### Using the Python interface
++
++The recommended Python distribution is Anaconda or Miniconda. To successfully build the python interface you need to add the following conda channels:
++```
++conda config --add channels conda-forge
++conda config --add channels willyd
++```
++and install the following packages:
++```
++conda install --yes cmake ninja numpy scipy protobuf==3.1.0 six scikit-image pyyaml pydotplus graphviz
++```
++If Python is installed the default is to build the python interface and python layers. If you wish to disable the python layers or the python build use the CMake options `-DBUILD_python_layer=0` and `-DBUILD_python=0` respectively. In order to use the python interface you need to either add the `C:\Projects\caffe\python` folder to your python path or copy the `C:\Projects\caffe\python\caffe` folder to your `site_packages` folder.
++
++### Using the MATLAB interface
++
++Follow the above procedure and use `-DBUILD_matlab=ON`. Change your current directory in MATLAB to `C:\Projects\caffe\matlab` and run the following command to run the tests:
++```
++>> caffe.run_tests()
++```
++If all tests pass you can test if the classification_demo works as well. First, from `C:\Projects\caffe` run `python scripts\download_model_binary.py models\bvlc_reference_caffenet` to download the pre-trained caffemodel from the model zoo. Then change your MATLAB directory to `C:\Projects\caffe\matlab\demo` and run `classification_demo`.
++
++### Using the Ninja generator
++
++You can choose to use the Ninja generator instead of Visual Studio for faster builds. To do so, change the option `set WITH_NINJA=1` in the `build_win.cmd` script. To install Ninja you can download the executable from github or install it via conda:
++```cmd
++> conda config --add channels conda-forge
++> conda install ninja --yes
++```
++When working with ninja you don't have the Visual Studio solutions as ninja is more akin to make. An alternative is to use [Visual Studio Code](https://code.visualstudio.com) with the CMake extensions and C++ extensions.
++
++### Building a shared library
++
++CMake can be used to build a shared library instead of the default static library. To do so follow the above procedure and use `-DBUILD_SHARED_LIBS=ON`. Please note however, that some tests (more specifically the solver related tests) will fail since both the test executable and caffe library do not share static objects contained in the protobuf library.
++
++### Troubleshooting
++
++Should you encounter any error please post the output of the above commands by redirecting the output to a file and open a topic on the [caffe-users list](https://groups.google.com/forum/#!forum/caffe-users) mailing list.
++
++## Known issues
++
++- The `GPUTimer` related test cases always fail on Windows. This seems to be a difference between UNIX and Windows.
++- Shared library (DLL) build will have failing tests.
++- Shared library build only works with the Ninja generator
++
++## Further Details
++
++Refer to the BVLC/caffe master branch README for all other details such as license, citation, and so on.
+Only in caffe/scripts: appveyor
+Only in caffe/scripts: build_win.cmd
+Only in caffe/scripts: download_prebuilt_dependencies.py
+diff -ur --strip-trailing-cr caffe-1.0/scripts/travis/install-deps.sh caffe/scripts/travis/install-deps.sh
+--- scripts/travis/install-deps.sh	2017-04-15 19:17:48.000000000 +0300
++++ scripts/travis/install-deps.sh	2021-03-15 15:08:50.355436500 +0300
+@@ -9,10 +9,10 @@
+ apt-get install -y --no-install-recommends \
+   build-essential \
+   graphviz \
+-  libboost-filesystem1.55-dev \
+-  libboost-python1.55-dev \
+-  libboost-system1.55-dev \
+-  libboost-thread1.55-dev \
++  libboost-filesystem-dev \
++  libboost-python-dev \
++  libboost-system-dev \
++  libboost-thread-dev \
+   libgflags-dev \
+   libgoogle-glog-dev \
+   libhdf5-serial-dev \
+diff -ur --strip-trailing-cr caffe-1.0/src/caffe/CMakeLists.txt caffe/src/caffe/CMakeLists.txt
+--- src/caffe/CMakeLists.txt	2017-04-15 19:17:48.000000000 +0300
++++ src/caffe/CMakeLists.txt	2021-03-15 15:08:50.357431300 +0300
+@@ -3,20 +3,53 @@
+ caffe_protobuf_generate_cpp_py(${proto_gen_folder} proto_srcs proto_hdrs proto_python ${proto_files})
+ 
+ # include python files either to force generation
+-add_library(proto STATIC ${proto_hdrs} ${proto_srcs} ${proto_python})
+-caffe_default_properties(proto)
+-target_link_libraries(proto PUBLIC ${PROTOBUF_LIBRARIES})
+-target_include_directories(proto PUBLIC ${PROTOBUF_INCLUDE_DIR})
++add_library(caffeproto STATIC ${proto_hdrs} ${proto_srcs} ${proto_python})
++caffe_default_properties(caffeproto)
++target_link_libraries(caffeproto PUBLIC ${PROTOBUF_LIBRARIES})
++target_include_directories(caffeproto PUBLIC ${PROTOBUF_INCLUDE_DIR})
+ 
+-list(INSERT Caffe_LINKER_LIBS 0 PUBLIC proto) # note, crucial to prepend!
++list(INSERT Caffe_LINKER_LIBS 0 PUBLIC caffeproto) # note, crucial to prepend!
+ 
+ # --[ Caffe library
+ 
+ # creates 'test_srcs', 'srcs', 'test_cuda', 'cuda' lists
+ caffe_pickup_caffe_sources(${PROJECT_SOURCE_DIR})
+ 
++# add this option here since CUDA will not honor
++# target_compile_definitions
++if(MSVC AND NOT BUILD_SHARED_LIBS)
++  set(_caffe_static_compile_def -DCAFFE_BUILDING_STATIC_LIB)
++endif()
++
+ if(HAVE_CUDA)
++  # collect any compile definitions from imported targets. This important so that
++  # preprocessor macros such as GLOG_NO_ABBREVIATED_SEVERITIES are defined.
++  # this is required since CUDA macros do not honor the INTERFACE_COMPILE_DEFINITIONS
++  unset(__cuda_options)
++  foreach(__lib ${Caffe_LINKER_LIBS})
++    if(TARGET ${__lib})
++      get_target_property(__interface_compile_definitions ${__lib} INTERFACE_COMPILE_DEFINITIONS)
++      if(__interface_compile_definitions)
++        foreach(__def ${__interface_compile_definitions})
++          # espace any parentheses because they are failing the build
++          # see cmake issue https://cmake.org/Bug/view.php?id=16065
++          string(REPLACE "(" "\\\(" __def_escaped ${__def})
++          string(REPLACE ")" "\\\)" __def_escaped ${__def_escaped})
++          # add the required -D flag
++          list(APPEND __cuda_options "-D${__def_escaped}")
++        endforeach()
++      endif()
++    endif()
++  endforeach()
++  list(APPEND __cuda_options ${_caffe_static_compile_def})
++  # add the required definitions
++  add_definitions(${__cuda_options})
++  # it seems that using the OPTIONS argument like:
++  # caffe_cuda_compile(cuda_objs ${cuda} OPTIONS ${__cuda_options})
++  # does not work. Use add/remove_definitions instead.
+   caffe_cuda_compile(cuda_objs ${cuda})
++  # remove them
++  remove_definitions(${__cuda_options})
+   list(APPEND srcs ${cuda_objs} ${cuda})
+ endif()
+ 
+@@ -35,6 +68,33 @@
+     VERSION   ${CAFFE_TARGET_VERSION}
+     SOVERSION ${CAFFE_TARGET_SOVERSION}
+     )
++if(MSVC AND BUILD_SHARED_LIBS)
++  # CMake 3.4 introduced a WINDOWS_EXPORT_ALL_SYMBOLS target property that makes it possible to
++  # build shared libraries without using the usual declspec() decoration.
++  # See: https://blog.kitware.com/create-dlls-on-windows-without-declspec-using-new-cmake-export-all-feature/
++  # and https://cmake.org/cmake/help/v3.5/prop_tgt/WINDOWS_EXPORT_ALL_SYMBOLS.html
++  # for details.
++  set_target_properties(caffe PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
++elseif(MSVC AND NOT BUILD_SHARED_LIBS)
++  # add a custom build command that generates a list of symbols
++  # to force linking. This is required because MSVC as nothing
++  # the whole-archive option
++  windows_create_link_header(caffe ${caffe_symbols_hdr})
++  get_filename_component(_name ${caffe_symbols_hdr} NAME)
++  set(CAFFE_INCLUDE_SYMBOLS "#include \"caffe/${_name}\"")
++  # definition needed to include CMake generated files
++  target_compile_definitions(caffe PRIVATE ${_caffe_static_compile_def}
++                                   PUBLIC -DCMAKE_WINDOWS_BUILD)
++endif()
++if(MSVC)
++  # Disable Boost autolinking for consuming projects
++  target_compile_definitions(caffe PUBLIC -DBOOST_ALL_NO_LIB)
++endif()
++if(MSVC AND USE_NCCL)
++  add_dependencies(caffe nccl)
++endif()
++
++configure_file(${caffe_export_hdr_in} ${caffe_export_hdr})
+ 
+ # ---[ Tests
+  add_subdirectory(test)
+@@ -42,7 +102,10 @@
+ # ---[ Install
+ install(DIRECTORY ${Caffe_INCLUDE_DIR}/caffe DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+ install(FILES ${proto_hdrs} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/caffe/proto)
+-install(TARGETS caffe proto EXPORT CaffeTargets DESTINATION ${CMAKE_INSTALL_LIBDIR})
++install(TARGETS caffe caffeproto EXPORT CaffeTargets DESTINATION ${CMAKE_INSTALL_LIBDIR})
++if(MSVC AND NOT BUILD_SHARED_LIBS)
++  install(FILES ${caffe_export_hdr} ${caffe_symbols_hdr} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/caffe)
++endif()
+ 
+ file(WRITE ${PROJECT_BINARY_DIR}/__init__.py)
+ list(APPEND proto_python ${PROJECT_BINARY_DIR}/__init__.py)
+diff -ur --strip-trailing-cr caffe-1.0/src/caffe/common.cpp caffe/src/caffe/common.cpp
+--- src/caffe/common.cpp	2017-04-15 19:17:48.000000000 +0300
++++ src/caffe/common.cpp	2021-03-15 15:08:50.358428400 +0300
+@@ -1,3 +1,8 @@
++#if defined(_MSC_VER)
++#include <process.h>
++#define getpid() _getpid()
++#endif
++
+ #include <boost/thread.hpp>
+ #include <glog/logging.h>
+ #include <cmath>
+@@ -46,7 +51,11 @@
+   // Google logging.
+   ::google::InitGoogleLogging(*(pargv)[0]);
+   // Provide a backtrace on segfault.
++
++  // Windows port of glogs doesn't have this function built
++#if !defined(_MSC_VER)
+   ::google::InstallFailureSignalHandler();
++#endif
+ }
+ 
+ #ifdef CPU_ONLY  // CPU-only Caffe.
+diff -ur --strip-trailing-cr caffe-1.0/src/caffe/layer_factory.cpp caffe/src/caffe/layer_factory.cpp
+--- src/caffe/layer_factory.cpp	2017-04-15 19:17:48.000000000 +0300
++++ src/caffe/layer_factory.cpp	2021-03-15 15:08:50.360423800 +0300
+@@ -4,6 +4,7 @@
+ #include <boost/python.hpp>
+ #endif
+ #include <string>
++#include <vector>
+ 
+ #include "caffe/layer.hpp"
+ #include "caffe/layer_factory.hpp"
+@@ -33,6 +34,78 @@
+ 
+ namespace caffe {
+ 
++template <typename Dtype>
++typename LayerRegistry<Dtype>::CreatorRegistry&
++LayerRegistry<Dtype>::Registry() {
++  static CreatorRegistry* g_registry_ = new CreatorRegistry();
++  return *g_registry_;
++}
++
++// Adds a creator.
++template <typename Dtype>
++void LayerRegistry<Dtype>::AddCreator(const string& type, Creator creator) {
++  CreatorRegistry& registry = Registry();
++  CHECK_EQ(registry.count(type), 0) << "Layer type " << type
++                                    << " already registered.";
++  registry[type] = creator;
++}
++
++// Get a layer using a LayerParameter.
++template <typename Dtype>
++shared_ptr<Layer<Dtype> > LayerRegistry<Dtype>::CreateLayer(
++    const LayerParameter& param) {
++  if (Caffe::root_solver()) {
++    LOG(INFO) << "Creating layer " << param.name();
++  }
++  const string& type = param.type();
++  CreatorRegistry& registry = Registry();
++  CHECK_EQ(registry.count(type), 1)
++      << "Unknown layer type: " << type
++      << " (known types: " << LayerTypeListString() << ")";
++  return registry[type](param);
++}
++
++template <typename Dtype>
++vector<string> LayerRegistry<Dtype>::LayerTypeList() {
++  CreatorRegistry& registry = Registry();
++  vector<string> layer_types;
++  for (typename CreatorRegistry::iterator iter = registry.begin();
++       iter != registry.end(); ++iter) {
++    layer_types.push_back(iter->first);
++  }
++  return layer_types;
++}
++
++// Layer registry should never be instantiated - everything is done with its
++// static variables.
++template <typename Dtype>
++LayerRegistry<Dtype>::LayerRegistry() {}
++
++template <typename Dtype>
++string LayerRegistry<Dtype>::LayerTypeListString() {
++  vector<string> layer_types = LayerTypeList();
++  string layer_types_str;
++  for (vector<string>::iterator iter = layer_types.begin();
++       iter != layer_types.end(); ++iter) {
++    if (iter != layer_types.begin()) {
++      layer_types_str += ", ";
++    }
++    layer_types_str += *iter;
++  }
++  return layer_types_str;
++}
++
++template <typename Dtype>
++LayerRegisterer<Dtype>::LayerRegisterer(
++    const string& type,
++    shared_ptr<Layer<Dtype> > (*creator)(const LayerParameter&)) {
++  // LOG(INFO) << "Registering layer type: " << type;
++  LayerRegistry<Dtype>::AddCreator(type, creator);
++}
++
++INSTANTIATE_CLASS(LayerRegistry);
++INSTANTIATE_CLASS(LayerRegisterer);
++
+ // Get convolution layer according to engine.
+ template <typename Dtype>
+ shared_ptr<Layer<Dtype> > GetConvolutionLayer(
+diff -ur --strip-trailing-cr caffe-1.0/src/caffe/layers/bnll_layer.cu caffe/src/caffe/layers/bnll_layer.cu
+--- src/caffe/layers/bnll_layer.cu	2017-04-15 19:17:48.000000000 +0300
++++ src/caffe/layers/bnll_layer.cu	2021-03-15 15:08:50.367404100 +0300
+@@ -5,7 +5,7 @@
+ 
+ namespace caffe {
+ 
+-const float kBNLL_THRESHOLD = 50.;
++__constant__ float kBNLL_THRESHOLD = 50.;
+ 
+ template <typename Dtype>
+ __global__ void BNLLForward(const int n, const Dtype* in, Dtype* out) {
+diff -ur --strip-trailing-cr caffe-1.0/src/caffe/layers/crop_layer.cpp caffe/src/caffe/layers/crop_layer.cpp
+--- src/caffe/layers/crop_layer.cpp	2017-04-15 19:17:48.000000000 +0300
++++ src/caffe/layers/crop_layer.cpp	2021-03-15 15:08:50.370395400 +0300
+@@ -40,8 +40,10 @@
+   const int start_axis = bottom[0]->CanonicalAxisIndex(param.axis());
+ 
+   // Initialize offsets to 0 and the new shape to the current shape of the data.
+-  offsets = vector<int>(input_dim, 0);
+   vector<int> new_shape(bottom[0]->shape());
++  vector<int> offsets_shape(1, input_dim);
++  offsets.Reshape(offsets_shape);
++  int* offset_data = offsets.mutable_cpu_data();
+ 
+   // Determine crop offsets and the new shape post-crop.
+   for (int i = 0; i < input_dim; ++i) {
+@@ -63,15 +65,22 @@
+           << "size " << bottom[1]->shape(i) << " and offset " << crop_offset;
+     }
+     new_shape[i] = new_size;
+-    offsets[i] = crop_offset;
++    offset_data[i] = crop_offset;
+   }
+   top[0]->Reshape(new_shape);
++  // Compute strides
++  src_strides_.Reshape(offsets_shape);
++  dest_strides_.Reshape(offsets_shape);
++  for (int i = 0; i < input_dim; ++i) {
++    src_strides_.mutable_cpu_data()[i] = bottom[0]->count(i + 1, input_dim);
++    dest_strides_.mutable_cpu_data()[i] = top[0]->count(i + 1, input_dim);
++  }
+ }
+ 
+ template <typename Dtype>
+ void CropLayer<Dtype>::crop_copy(const vector<Blob<Dtype>*>& bottom,
+              const vector<Blob<Dtype>*>& top,
+-             const vector<int>& offsets,
++             const int* offsets,
+              vector<int> indices,
+              int cur_dim,
+              const Dtype* src_data,
+@@ -115,7 +124,8 @@
+   std::vector<int> indices(top[0]->num_axes(), 0);
+   const Dtype* bottom_data = bottom[0]->cpu_data();
+   Dtype* top_data = top[0]->mutable_cpu_data();
+-  crop_copy(bottom, top, offsets, indices, 0, bottom_data, top_data, true);
++  crop_copy(bottom, top, offsets.cpu_data(), indices, 0, bottom_data, top_data,
++      true);
+ }
+ 
+ template <typename Dtype>
+@@ -127,7 +137,8 @@
+   if (propagate_down[0]) {
+     caffe_set(bottom[0]->count(), static_cast<Dtype>(0), bottom_diff);
+     std::vector<int> indices(top[0]->num_axes(), 0);
+-    crop_copy(bottom, top, offsets, indices, 0, top_diff, bottom_diff, false);
++    crop_copy(bottom, top, offsets.cpu_data(), indices, 0, top_diff,
++        bottom_diff, false);
+   }
+ }
+ 
+diff -ur --strip-trailing-cr caffe-1.0/src/caffe/layers/crop_layer.cu caffe/src/caffe/layers/crop_layer.cu
+--- src/caffe/layers/crop_layer.cu	2017-04-15 19:17:48.000000000 +0300
++++ src/caffe/layers/crop_layer.cu	2021-03-15 15:08:50.370395400 +0300
+@@ -4,90 +4,63 @@
+ 
+ namespace caffe {
+ 
+-// Copy (one line per thread) from one array to another, with arbitrary
+-// strides in the last two dimensions.
++__device__ int compute_uncropped_index(
++    int index,
++    const int ndims,
++    const int* src_strides,
++    const int* dest_strides,
++    const int* offsets) {
++  int dest_index = index;
++  int src_index = 0;
++  for (int i = 0; i < ndims; ++i) {
++      int coord = dest_index / dest_strides[i];
++      dest_index -= coord * dest_strides[i];
++      src_index += src_strides[i] * (coord + offsets[i]);
++  }
++  return src_index;
++}
++
+ template <typename Dtype>
+-__global__ void copy_kernel(const int n, const int height, const int width,
+-    const int src_inner_stride,
+-    const int dest_inner_stride,
++__global__ void crop_kernel_forward(const int nthreads,
++    const int ndims,
++    const int* src_strides,
++    const int* dest_strides,
++    const int* offsets,
+     const Dtype* src, Dtype* dest) {
+-  CUDA_KERNEL_LOOP(index, n) {
+-    int src_start = index * src_inner_stride;
+-    int dest_start = index * dest_inner_stride;
+-    for (int i = 0; i < width; ++i) {
+-      dest[dest_start + i] = src[src_start + i];
+-    }
++  CUDA_KERNEL_LOOP(index, nthreads) {
++    int src_index = compute_uncropped_index(
++        index, ndims, src_strides, dest_strides, offsets);
++    dest[index] = src[src_index];
+   }
+ }
+ 
+ template <typename Dtype>
+-void CropLayer<Dtype>::crop_copy_gpu(const vector<Blob<Dtype>*>& bottom,
+-             const vector<Blob<Dtype>*>& top,
+-             const vector<int>& offsets,
+-             vector<int> indices,
+-             int cur_dim,
+-             const Dtype* src_data,
+-             Dtype* dest_data,
+-             bool is_forward) {
+-  if (cur_dim + 2 < top[0]->num_axes()) {
+-    // We are not yet at the final dimension, call copy recursivley
+-    for (int i = 0; i < top[0]->shape(cur_dim); ++i) {
+-      indices[cur_dim] = i;
+-      crop_copy_gpu(bottom, top, offsets, indices, cur_dim+1,
+-                src_data, dest_data, is_forward);
+-    }
+-  } else {
+-    // We are at the last two dimensions, which are stored continuously in
+-    // memory. With (N,C,H,W)
+-    //              (0,1,2,3) cur_dim   -> H
+-    //                        cur_dim+1 -> W
+-    const int lines = top[0]->shape(cur_dim);
+-    const int height = top[0]->shape(cur_dim);
+-    const int width = top[0]->shape(cur_dim+1);
+-    std::vector<int> ind_off(cur_dim+2, 0);
+-    for (int j = 0; j < cur_dim; ++j) {
+-        ind_off[j] = indices[j] + offsets[j];
+-    }
+-    ind_off[cur_dim] = offsets[cur_dim];
+-    ind_off[cur_dim+1] = offsets[cur_dim+1];
+-    // Compute copy strides
+-    const int src_inner_stride = bottom[0]->shape(cur_dim+1);
+-    const int dest_inner_stride = top[0]->shape(cur_dim+1);
+-
+-    if (is_forward) {
+-      const Dtype* bottom_data = bottom[0]->gpu_data() +
+-          bottom[0]->offset(ind_off);
+-      Dtype* top_data = top[0]->mutable_gpu_data() +
+-          top[0]->offset(indices);
+-      // NOLINT_NEXT_LINE(whitespace/operators)
+-      copy_kernel<<<CAFFE_GET_BLOCKS(lines), CAFFE_CUDA_NUM_THREADS>>>(
+-          lines, height, width,
+-          src_inner_stride,
+-          dest_inner_stride,
+-          bottom_data, top_data);
+-
+-    } else {
+-      const Dtype* top_diff = top[0]->gpu_diff() +
+-          top[0]->offset(indices);
+-      Dtype* bottom_diff = bottom[0]->mutable_gpu_diff() +
+-          bottom[0]->offset(ind_off);
+-      // NOLINT_NEXT_LINE(whitespace/operators)
+-      copy_kernel<<<CAFFE_GET_BLOCKS(lines), CAFFE_CUDA_NUM_THREADS>>>(
+-          lines, height, width,
+-          dest_inner_stride,
+-          src_inner_stride,
+-          top_diff, bottom_diff);
+-    }
++__global__ void crop_kernel_backward(const int nthreads,
++    const int ndims,
++    const int* src_strides,
++    const int* dest_strides,
++    const int* offsets,
++    Dtype* src, const Dtype* dest) {
++  CUDA_KERNEL_LOOP(index, nthreads) {
++    int src_index = compute_uncropped_index(
++        index, ndims, src_strides, dest_strides, offsets);
++    src[src_index] = dest[index];
+   }
+ }
+ 
+ template <typename Dtype>
+ void CropLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+     const vector<Blob<Dtype>*>& top) {
+-  std::vector<int> indices(top[0]->num_axes(), 0);
+   const Dtype* bottom_data = bottom[0]->gpu_data();
+   Dtype* top_data = top[0]->mutable_gpu_data();
+-  crop_copy_gpu(bottom, top, offsets, indices, 0, bottom_data, top_data, true);
++  int n = top[0]->count();
++  // NOLINT_NEXT_LINE(whitespace/operators)
++  crop_kernel_forward<<<CAFFE_GET_BLOCKS(n), CAFFE_CUDA_NUM_THREADS>>>(n,
++      bottom[0]->num_axes(),
++      src_strides_.gpu_data(),
++      dest_strides_.gpu_data(),
++      offsets.gpu_data(),
++      bottom_data, top_data);
+ }
+ 
+ template <typename Dtype>
+@@ -95,12 +68,17 @@
+     const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
+   const Dtype* top_diff = top[0]->gpu_diff();
+   Dtype* bottom_diff = bottom[0]->mutable_gpu_diff();
++  int n = top[0]->count();
+ 
+   if (propagate_down[0]) {
+     caffe_gpu_set(bottom[0]->count(), static_cast<Dtype>(0), bottom_diff);
+-    std::vector<int> indices(top[0]->num_axes(), 0);
+-    crop_copy_gpu(bottom, top, offsets, indices, 0, top_diff, bottom_diff,
+-                  false);
++    // NOLINT_NEXT_LINE(whitespace/operators)
++    crop_kernel_backward<<<CAFFE_GET_BLOCKS(n), CAFFE_CUDA_NUM_THREADS>>>(n,
++        bottom[0]->num_axes(),
++        src_strides_.gpu_data(),
++        dest_strides_.gpu_data(),
++        offsets.gpu_data(),
++        bottom_diff, top_diff);
+   }
+ }
+ 
+Only in caffe/src/caffe: solver_factory.cpp
+diff -ur --strip-trailing-cr caffe-1.0/src/caffe/test/CMakeLists.txt caffe/src/caffe/test/CMakeLists.txt
+--- src/caffe/test/CMakeLists.txt	2017-04-15 19:17:48.000000000 +0300
++++ src/caffe/test/CMakeLists.txt	2021-03-15 15:08:50.421547100 +0300
+@@ -31,6 +31,10 @@
+ caffe_default_properties(${the_target})
+ caffe_set_runtime_directory(${the_target} "${PROJECT_BINARY_DIR}/test")
+ 
++if(MSVC AND COPY_PREREQUISITES)
++  caffe_copy_prerequisites(${the_target} USE_HARD_LINKS)
++endif()
++
+ # ---[ Adding runtest
+ add_custom_target(runtest COMMAND ${the_target} ${test_args}
+-                          WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
++                          WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
+\ No newline at end of file
+diff -ur --strip-trailing-cr caffe-1.0/src/caffe/test/test_benchmark.cpp caffe/src/caffe/test/test_benchmark.cpp
+--- src/caffe/test/test_benchmark.cpp	2017-04-15 19:17:48.000000000 +0300
++++ src/caffe/test/test_benchmark.cpp	2021-03-15 15:08:50.424539300 +0300
+@@ -9,7 +9,12 @@
+ 
+ namespace caffe {
+ 
++#ifdef _MSC_VER
++// Timer tests have issues on appveyor
++const float kMillisecondsThreshold = 50;
++#else
+ const float kMillisecondsThreshold = 30;
++#endif
+ 
+ template <typename TypeParam>
+ class BenchmarkTest : public MultiDeviceTest<TypeParam> {};
+diff -ur --strip-trailing-cr caffe-1.0/src/caffe/test/test_blob.cpp caffe/src/caffe/test/test_blob.cpp
+--- src/caffe/test/test_blob.cpp	2017-04-15 19:17:48.000000000 +0300
++++ src/caffe/test/test_blob.cpp	2021-03-15 15:08:50.424539300 +0300
+@@ -35,12 +35,14 @@
+   EXPECT_EQ(this->blob_->count(), 0);
+ }
+ 
++#if !defined(CPU_ONLY)
+ TYPED_TEST(BlobSimpleTest, TestPointersCPUGPU) {
+   EXPECT_TRUE(this->blob_preshaped_->gpu_data());
+   EXPECT_TRUE(this->blob_preshaped_->cpu_data());
+   EXPECT_TRUE(this->blob_preshaped_->mutable_gpu_data());
+   EXPECT_TRUE(this->blob_preshaped_->mutable_cpu_data());
+ }
++#endif
+ 
+ TYPED_TEST(BlobSimpleTest, TestReshape) {
+   this->blob_->Reshape(2, 3, 4, 5);
+diff -ur --strip-trailing-cr caffe-1.0/src/caffe/test/test_gradient_based_solver.cpp caffe/src/caffe/test/test_gradient_based_solver.cpp
+--- src/caffe/test/test_gradient_based_solver.cpp	2017-04-15 19:17:48.000000000 +0300
++++ src/caffe/test/test_gradient_based_solver.cpp	2021-03-15 15:08:50.435501700 +0300
+@@ -180,6 +180,9 @@
+       proto << "momentum: " << momentum << " ";
+     }
+     MakeTempDir(&snapshot_prefix_);
++#if defined(_MSC_VER)
++    std::replace(snapshot_prefix_.begin(), snapshot_prefix_.end(), '\\', '/');
++#endif
+     proto << "snapshot_prefix: '" << snapshot_prefix_ << "/' ";
+     if (snapshot) {
+       proto << "snapshot: " << num_iters << " ";
+@@ -526,9 +529,8 @@
+     for (int i = 0; i < orig_params.size(); ++i) {
+       param_copies[i].reset(new Blob<Dtype>());
+       const bool kReshape = true;
+-      for (int copy_diff = false; copy_diff <= true; ++copy_diff) {
+-        param_copies[i]->CopyFrom(*orig_params[i], copy_diff, kReshape);
+-      }
++      param_copies[i]->CopyFrom(*orig_params[i], false/*copy data*/, kReshape);
++      param_copies[i]->CopyFrom(*orig_params[i], true/*copy diff*/, kReshape);
+     }
+ 
+     // Save the solver history
+@@ -538,9 +540,10 @@
+     for (int i = 0; i < orig_history.size(); ++i) {
+       history_copies[i].reset(new Blob<Dtype>());
+       const bool kReshape = true;
+-      for (int copy_diff = false; copy_diff <= true; ++copy_diff) {
+-        history_copies[i]->CopyFrom(*orig_history[i], copy_diff, kReshape);
+-      }
++      history_copies[i]->CopyFrom(*orig_history[i],
++            false/*copy data*/, kReshape);
++      history_copies[i]->CopyFrom(*orig_history[i],
++            true/*copy diff*/, kReshape);
+     }
+ 
+     // Run the solver for num_iters iterations and snapshot.
+diff -ur --strip-trailing-cr caffe-1.0/src/caffe/test/test_lrn_layer.cpp caffe/src/caffe/test/test_lrn_layer.cpp
+--- src/caffe/test/test_lrn_layer.cpp	2017-04-15 19:17:48.000000000 +0300
++++ src/caffe/test/test_lrn_layer.cpp	2021-03-15 15:08:50.440497100 +0300
+@@ -279,11 +279,10 @@
+   vector<Blob<Dtype>*> blob_top_vec_;
+ };
+ 
+-template <typename TypeParam>
+-void CuDNNLRNLayerTest<TypeParam>::ReferenceLRNForward(
+-    const Blob<TypeParam>& blob_bottom, const LayerParameter& layer_param,
+-    Blob<TypeParam>* blob_top) {
+-  typedef TypeParam Dtype;
++template <typename Dtype>
++void CuDNNLRNLayerTest<Dtype>::ReferenceLRNForward(
++    const Blob<Dtype>& blob_bottom, const LayerParameter& layer_param,
++    Blob<Dtype>* blob_top) {
+   blob_top->Reshape(blob_bottom.num(), blob_bottom.channels(),
+       blob_bottom.height(), blob_bottom.width());
+   Dtype* top_data = blob_top->mutable_cpu_data();
+diff -ur --strip-trailing-cr caffe-1.0/src/caffe/util/db_lmdb.cpp caffe/src/caffe/util/db_lmdb.cpp
+--- src/caffe/util/db_lmdb.cpp	2017-04-15 19:17:48.000000000 +0300
++++ src/caffe/util/db_lmdb.cpp	2021-03-15 15:08:50.458449900 +0300
+@@ -1,6 +1,11 @@
+ #ifdef USE_LMDB
+ #include "caffe/util/db_lmdb.hpp"
+ 
++#if defined(_MSC_VER)
++#include <direct.h>
++#define mkdir(X, Y) _mkdir(X)
++#endif
++
+ #include <sys/stat.h>
+ 
+ #include <string>
+diff -ur --strip-trailing-cr caffe-1.0/src/caffe/util/io.cpp caffe/src/caffe/util/io.cpp
+--- src/caffe/util/io.cpp	2017-04-15 19:17:48.000000000 +0300
++++ src/caffe/util/io.cpp	2021-03-15 15:08:50.460416200 +0300
+@@ -1,4 +1,9 @@
+ #include <fcntl.h>
++
++#if defined(_MSC_VER)
++#include <io.h>
++#endif
++
+ #include <google/protobuf/io/coded_stream.h>
+ #include <google/protobuf/io/zero_copy_stream_impl.h>
+ #include <google/protobuf/text_format.h>
+@@ -50,7 +55,11 @@
+ }
+ 
+ bool ReadProtoFromBinaryFile(const char* filename, Message* proto) {
++#if defined (_MSC_VER)  // for MSC compiler binary flag needs to be specified
++  int fd = open(filename, O_RDONLY | O_BINARY);
++#else
+   int fd = open(filename, O_RDONLY);
++#endif
+   CHECK_NE(fd, -1) << "File not found: " << filename;
+   ZeroCopyInputStream* raw_input = new FileInputStream(fd);
+   CodedInputStream* coded_input = new CodedInputStream(raw_input);
+diff -ur --strip-trailing-cr caffe-1.0/src/caffe/util/signal_handler.cpp caffe/src/caffe/util/signal_handler.cpp
+--- src/caffe/util/signal_handler.cpp	2017-04-15 19:17:48.000000000 +0300
++++ src/caffe/util/signal_handler.cpp	2021-03-15 15:08:50.462408300 +0300
+@@ -13,9 +13,15 @@
+ 
+   void handle_signal(int signal) {
+     switch (signal) {
++#ifdef _MSC_VER
++    case SIGBREAK:  // there is no SIGHUP in windows, take SIGBREAK instead.
++      got_sighup = true;
++      break;
++#else
+     case SIGHUP:
+       got_sighup = true;
+       break;
++#endif
+     case SIGINT:
+       got_sigint = true;
+       break;
+@@ -27,7 +33,14 @@
+       LOG(FATAL) << "Tried to hookup signal handlers more than once.";
+     }
+     already_hooked_up = true;
+-
++#ifdef _MSC_VER
++    if (signal(SIGBREAK, handle_signal) == SIG_ERR) {
++      LOG(FATAL) << "Cannot install SIGBREAK handler.";
++    }
++    if (signal(SIGINT, handle_signal) == SIG_ERR) {
++      LOG(FATAL) << "Cannot install SIGINT handler.";
++    }
++#else
+     struct sigaction sa;
+     // Setup the handler
+     sa.sa_handler = &handle_signal;
+@@ -42,11 +55,20 @@
+     if (sigaction(SIGINT, &sa, NULL) == -1) {
+       LOG(FATAL) << "Cannot install SIGINT handler.";
+     }
++#endif
+   }
+ 
+   // Set the signal handlers to the default.
+   void UnhookHandler() {
+     if (already_hooked_up) {
++#ifdef _MSC_VER
++      if (signal(SIGBREAK, SIG_DFL) == SIG_ERR) {
++        LOG(FATAL) << "Cannot uninstall SIGBREAK handler.";
++      }
++      if (signal(SIGINT, SIG_DFL) == SIG_ERR) {
++        LOG(FATAL) << "Cannot uninstall SIGINT handler.";
++      }
++#else
+       struct sigaction sa;
+       // Setup the sighub handler
+       sa.sa_handler = SIG_DFL;
+@@ -61,7 +83,7 @@
+       if (sigaction(SIGINT, &sa, NULL) == -1) {
+         LOG(FATAL) << "Cannot uninstall SIGINT handler.";
+       }
+-
++#endif
+       already_hooked_up = false;
+     }
+   }
+diff -ur --strip-trailing-cr caffe-1.0/src/gtest/CMakeLists.txt caffe/src/gtest/CMakeLists.txt
+--- src/gtest/CMakeLists.txt	2017-04-15 19:17:48.000000000 +0300
++++ src/gtest/CMakeLists.txt	2021-03-15 15:08:50.463403200 +0300
+@@ -1,7 +1,9 @@
+ add_library(gtest STATIC EXCLUDE_FROM_ALL gtest.h gtest-all.cpp)
+ caffe_default_properties(gtest)
+ target_include_directories(gtest PUBLIC ${Caffe_SRC_DIR})
+-target_compile_definitions(gtest PUBLIC -DGTEST_USE_OWN_TR1_TUPLE)
++if(NOT MSVC)
++  target_compile_definitions(gtest PUBLIC -DGTEST_USE_OWN_TR1_TUPLE)
++endif()
+ 
+ 
+ #add_library(gtest_main gtest_main.cc)
+diff -ur --strip-trailing-cr caffe-1.0/tools/caffe.cpp caffe/tools/caffe.cpp
+--- tools/caffe.cpp	2017-04-15 19:17:48.000000000 +0300
++++ tools/caffe.cpp	2021-03-15 15:08:50.472380100 +0300
+@@ -174,6 +174,7 @@
+     return caffe::SolverAction::NONE;
+   }
+   LOG(FATAL) << "Invalid signal effect \""<< flag_value << "\" was specified";
++  return caffe::SolverAction::NONE;
+ }
+ 
+ // Train / Finetune a model.
+diff -ur --strip-trailing-cr caffe-1.0/tools/CMakeLists.txt caffe/tools/CMakeLists.txt
+--- tools/CMakeLists.txt	2017-04-15 19:17:48.000000000 +0300
++++ tools/CMakeLists.txt	2021-03-15 15:08:50.471392700 +0300
+@@ -15,6 +15,10 @@
+   target_link_libraries(${name} ${Caffe_LINK})
+   caffe_default_properties(${name})
+ 
++  if(MSVC AND COPY_PREREQUISITES)
++    caffe_copy_prerequisites(${name} USE_HARD_LINKS)
++  endif()
++
+   # set back RUNTIME_OUTPUT_DIRECTORY
+   caffe_set_runtime_directory(${name} "${PROJECT_BINARY_DIR}/tools")
+   caffe_set_solution_folder(${name} tools)
+@@ -22,9 +26,17 @@
+   # restore output name without suffix
+   if(name MATCHES "caffe.bin")
+     set_target_properties(${name} PROPERTIES OUTPUT_NAME caffe)
++      if(MSVC)
++    	# the exectuable will have an import library with the same name as the caffe lib
++	    # so change the import library to avoid name clashes
++      set_target_properties(${name} PROPERTIES IMPORT_SUFFIX ".bin.lib")
++    endif()
+   endif()
+ 
+   # Install
+   install(TARGETS ${name} DESTINATION ${CMAKE_INSTALL_BINDIR})
+ 
++  if(MSVC AND INSTALL_PREREQUISITES)
++    caffe_install_prerequisites(${name} DESTINATION ${CMAKE_INSTALL_BINDIR})
++  endif()
+ endforeach(source)
