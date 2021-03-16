@@ -1,6 +1,7 @@
 [generators]
 cmake
 virtualrunenv
+cmake_find_package
 
 [requires]
 b2/4.2.0
