@@ -36,6 +36,7 @@ boost:shared=True
 c-ares:shared=False
 caffe:shared=False
 caffe:with_opencv=True
+caffe:with_leveldb=True
 curl:shared=True
 facesdk:shared=True
 ffmpeg:shared=True
