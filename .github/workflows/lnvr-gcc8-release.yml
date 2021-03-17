@@ -1,4 +1,4 @@
-name: LNVR gcc-8 Release
+name: LNVR GCC-8 Release
 
 on:
   pull_request:

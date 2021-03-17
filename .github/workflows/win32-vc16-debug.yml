@@ -1,4 +1,4 @@
-name: CI
+name: Win32 VC-16 Debug
 
 on:
   pull_request:

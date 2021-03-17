@@ -1,4 +1,4 @@
-name: CI
+name: Mac Clang-11 Release
 
 on:
   pull_request:
