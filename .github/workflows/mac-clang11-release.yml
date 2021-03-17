@@ -4,9 +4,11 @@ on:
   pull_request:
     paths:
       - 'recipes/**'
-      - 'trassir/mac-clang11/**'
       - 'builder/**'
       - '.github/workflows/mac-clang11-release.yml'
+      - 'trassir/mac-clang11/conanfile.txt'
+      - 'trassir/mac-clang11/conanprofile.release'
+
   push:
     branches:
       - master

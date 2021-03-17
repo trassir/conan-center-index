@@ -4,9 +4,11 @@ on:
   pull_request:
     paths:
       - 'recipes/**'
-      - 'trassir/lnvr-gcc8/**'
       - 'builder/**'
       - '.github/workflows/lnvr-gcc8-release.yml'
+      - 'trassir/lnvr-gcc8/conanfile.txt'
+      - 'trassir/lnvr-gcc8/conanprofile.release'
+
   push:
     branches:
       - master
