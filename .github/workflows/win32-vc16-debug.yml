@@ -4,7 +4,7 @@ on:
   pull_request:
     paths:
       - 'recipes/**'
-      - 'trassir/**'
+      - 'trassir/win32-vc16/**'
       - 'builder/**'
       - '.github/workflows/win32-vc16-debug.yml'
   push:

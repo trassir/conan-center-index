@@ -4,7 +4,7 @@ on:
   pull_request:
     paths:
       - 'recipes/**'
-      - 'trassir/**'
+      - 'trassir/lnvr-gcc8/**'
       - 'builder/**'
       - '.github/workflows/lnvr-gcc8-release.yml'
   push:

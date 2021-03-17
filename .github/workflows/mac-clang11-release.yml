@@ -4,7 +4,7 @@ on:
   pull_request:
     paths:
       - 'recipes/**'
-      - 'trassir/**'
+      - 'trassir/mac-clang11/**'
       - 'builder/**'
       - '.github/workflows/mac-clang11-release.yml'
   push:
