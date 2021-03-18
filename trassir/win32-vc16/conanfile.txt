@@ -8,8 +8,8 @@ boost/1.69.0
 c-ares/1.15.0
 bzip2/1.0.8
 ffmpeg/3.3.1
-glog/0.4.0
 gflags/2.2.2
+glog/0.4.0
 hdf5/1.10.6
 intel_media_sdk/2018R2_1
 jsoncpp/1.8.3
@@ -23,7 +23,7 @@ openblas/0.3.7
 opencv/2.4.13.5
 openh264/1.7.0
 protobuf/3.9.1
-protoc/3.9.1.tmp1
+protoc/3.9.1.dssl1
 snappy/1.1.8
 xz_utils/5.2.4
 zlib/1.2.11
