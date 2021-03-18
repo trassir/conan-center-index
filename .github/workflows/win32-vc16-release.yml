@@ -14,9 +14,10 @@ on:
       - master
     paths:
       - 'recipes/**'
-      - 'trassir/**'
       - 'builder/**'
       - '.github/workflows/win32-vc16-release.yml'
+      - 'trassir/win32-vc16/conanfile.txt'
+      - 'trassir/win32-vc16/conanprofile.release'
 
 env:
   LDAP_USERNAME: ${{ secrets.LDAP_USERNAME }}

@@ -14,9 +14,10 @@ on:
       - master
     paths:
       - 'recipes/**'
-      - 'trassir/**'
       - 'builder/**'
       - '.github/workflows/lnvr-gcc8-release.yml'
+      - 'trassir/lnvr-gcc8/conanfile.txt'
+      - 'trassir/lnvr-gcc8/conanprofile.release'
 
 env:
   LDAP_USERNAME: ${{ secrets.LDAP_USERNAME }}
