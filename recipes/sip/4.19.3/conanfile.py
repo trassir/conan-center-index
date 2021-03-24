@@ -81,7 +81,7 @@ class SipConan(ConanFile):
                 ))
                 # cannot be bothered to fix build of siplib which we don't use anyway
                 with tools.chdir("sipgen"):
-                    self.run("nmake")
+                    self.run("vcvarsall x86 && nmake")
 
     def package(self):
         if tools.os_info.is_macos:
