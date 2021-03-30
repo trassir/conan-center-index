@@ -23,7 +23,11 @@ class SipConan(ConanFile):
     exports = ""
     _source_subfolder = "source_subfolder"
 
-    def system_requirements(self):
+    def configure(self):
+        del self.settings.compiler.libcxx
+        del self.settings.compiler.cppstd
+
+    def source(self):
         import pip
         if hasattr(pip, "main"):
             pip.main(["install", "mercurial"])
@@ -38,11 +42,6 @@ class SipConan(ConanFile):
             installer.install("bison")
             installer.install("flex")
 
-    def configure(self):
-        del self.settings.compiler.libcxx
-        del self.settings.compiler.cppstd
-
-    def source(self):
         self.run("hg clone {url} {folder}".format(url = self.url, folder = self._source_subfolder))
         with tools.chdir(self._source_subfolder):
             self.run("hg up -C -r {rev}".format(rev = self.version))
