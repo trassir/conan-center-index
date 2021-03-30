@@ -8,7 +8,6 @@ from conans import ConanFile, AutoToolsBuildEnvironment, tools
 # based on https://github.com/conan-community/conan-ncurses/blob/stable/6.1/conanfile.py
 class SipConan(ConanFile):
     name = "sip"
-    version = "4.19.3"
     license = "GPL2"
     homepage = "https://www.riverbankcomputing.com/software/sip/intro"
     description = "SIP comprises a code generator and a Python module"
@@ -44,7 +43,7 @@ class SipConan(ConanFile):
 
         self.run("hg clone {url} {folder}".format(url = self.url, folder = self._source_subfolder))
         with tools.chdir(self._source_subfolder):
-            self.run("hg up -C -r {rev}".format(rev = self.version))
+            self.run("hg up -C -r {rev}".format(rev = self.version.split(".dssl")[0]))
         if tools.os_info.is_windows:
             tools.replace_in_file(os.path.join(self._source_subfolder, "build.py"),
                                   "os.system('flex -o%s %s' % (lexer_c, lexer_l))",
