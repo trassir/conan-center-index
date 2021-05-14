@@ -1,6 +1,7 @@
 [generators]
 cmake
 virtualrunenv
+virtualenv
 
 [requires]
 atl/0.0@trassir/sdk120
