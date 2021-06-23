@@ -615,24 +615,27 @@ class QtConan(ConanFile):
         if self.options.cross_compile:
             args += ["-device-option CROSS_COMPILE=%s" % self.options.cross_compile]
 
-        def _getenvpath(var):
-            val = os.getenv(var)
-            if val and tools.os_info.is_windows:
-                val = val.replace("\\", "/")
-                os.environ[var] = val
-            return val
+        if tools.os_info.is_windows:
+            args += ['-mp']
+        else:
+            def _getenvpath(var):
+                val = os.getenv(var)
+                if val and tools.os_info.is_windows:
+                    val = val.replace("\\", "/")
+                    os.environ[var] = val
+                return val
 
-        value = _getenvpath('CC')
-        if value:
-            args += ['QMAKE_CC="' + value + '"',
-                     'QMAKE_LINK_C="' + value + '"',
-                     'QMAKE_LINK_C_SHLIB="' + value + '"']
+            value = _getenvpath('CC')
+            if value:
+                args += ['QMAKE_CC="' + value + '"',
+                         'QMAKE_LINK_C="' + value + '"',
+                         'QMAKE_LINK_C_SHLIB="' + value + '"']
 
-        value = _getenvpath('CXX')
-        if value:
-            args += ['QMAKE_CXX="' + value + '"',
-                     'QMAKE_LINK="' + value + '"',
-                     'QMAKE_LINK_SHLIB="' + value + '"']
+            value = _getenvpath('CXX')
+            if value:
+                args += ['QMAKE_CXX="' + value + '"',
+                         'QMAKE_LINK="' + value + '"',
+                         'QMAKE_LINK_SHLIB="' + value + '"']
 
         if tools.os_info.is_linux and self.settings.compiler == "clang":
             args += ['QMAKE_CXXFLAGS+="-ftemplate-depth=1024"']
@@ -670,8 +673,12 @@ class QtConan(ConanFile):
                     build_env['CPLUS_INCLUDE_PATH'] = os.pathsep.join(i_path)
                     build_env['LIBRARY_PATH'] = os.pathsep.join(l_path)
             with tools.environment_append(build_env):
+                if tools.os_info.is_windows:
+                    config_bat = 'configure.bat'
+                else:
+                    config_bat = 'configure'
                 try:
-                    self.run("%s/qt5/configure %s" % (self.source_folder, " ".join(args)), run_environment=True)
+                    self.run("%s %s" % (os.path.join(self.source_folder, 'qt5', config_bat), " ".join(args)), run_environment=True)
                 finally:
                     self.output.info(open('config.log', errors='backslashreplace').read())
 
