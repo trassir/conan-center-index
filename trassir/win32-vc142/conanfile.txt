@@ -4,12 +4,10 @@ virtualrunenv
 virtualenv
 
 [requires]
-axtls/1.5.3.dssl1
 b2/4.2.0
 boost/1.69.0
 c-ares/1.15.0
 caffe/1.0.windows
-libcurl/7.64.1
 bzip2/1.0.8
 ffmpeg/3.3.1
 freetype/2.10.1
@@ -21,10 +19,10 @@ jsoncpp/1.8.3
 leveldb/1.22
 libjpeg/9d.dssl1
 libpng/1.6.37
+libpq/11.5
 lmdb/0.9.28.dssl1
 miniupnpc/2.1
 nasm/2.14
-onnxruntime/1.7.2
 openal/1.20.1
 openblas/0.3.7
 opencv/2.4.13.5
@@ -71,7 +69,7 @@ opencv:shared=True
 opencv:jasper=False
 opencv:openexr=False
 opencv:tiff=False
-openssl:shared=True
+OpenSSL:shared=True
 pjsip:shared=False
 protobuf:shared=False
 sdl:shared=True

@@ -4,7 +4,7 @@ virtualrunenv
 
 [requires]
 OpenSSL/1.0.2l@conan/stable # GHA: ignore trassir/stable
-axtls/1.5.3.dssl1
+axtls/1.5.3@trassir/stable # GHA: ignore trassir/stable
 boost/1.64.0@conan/stable # GHA: ignore trassir/stable
 c-ares/1.15.0@conan/stable # GHA: ignore trassir/stable
 ffmpeg/3.3.1@trassir/stable # GHA: ignore trassir/stable
@@ -12,7 +12,7 @@ glew/2.1.0@bincrafters/stable # GHA: ignore trassir/stable
 jansson/2.12@bincrafters/stable # GHA: ignore trassir/stable
 jsoncpp/1.8.3@trassir/stable # GHA: ignore trassir/stable
 libcurl/7.50.3@bincrafters/stable # GHA: ignore trassir/stable
-libpq/9.6.9@bincrafters/stable # GHA: ignore trassir/stable
+libpq/11.5
 miniupnpc/2.1@rhard/testing # GHA: ignore trassir/stable
 openal/1.19.0@trassir/stable # GHA: ignore trassir/stable
 opencv/2.4.13.5@conan/stable # GHA: ignore trassir/stable
