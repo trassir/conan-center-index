@@ -6,6 +6,7 @@ import platform
 class QtWebKitConan(ConanFile):
     name = "qtwebkit"
     version = "5.212.0-alpha4.dssl1"
+    original_version = "5.212.0-alpha4"
     license = "LGPL-2.0-or-later, LGPL-2.1-or-later, BSD-2-Clause"
     homepage = "https://github.com/qtwebkit/qtwebkit"
     description = "Qt port of WebKit"
@@ -13,12 +14,11 @@ class QtWebKitConan(ConanFile):
     settings = "os", "compiler", "build_type", "arch"
     generators = 'cmake'
     exports_sources = [
-        "patches/clang-11-jsc.patch",
-        "patches/OptionsQt.patch",
-        "patches/cmake_version.patch"
+        "patches/*.patch"
     ]
     _source_subfolder = "source_subfolder"
     _build_subfolder = "build_subfolder"
+    short_paths = True
 
     options = {
         "with_bmalloc": [True, False],
@@ -56,7 +56,19 @@ class QtWebKitConan(ConanFile):
         requires.append("libxcomposite/0.4.5")
 
     def build_requirements(self):
-        pass
+        if tools.os_info.is_windows:
+            if not tools.which("bison") or not tools.which("flex"):
+                self.build_requires("winflexbison/2.5.22")
+        else:
+            if not tools.which("bison"):
+                self.build_requires("bison/3.5.3")
+            if not tools.which("flex"):
+                self.build_requires("flex/2.6.4")
+
+        if not tools.which("gperf"):
+            self.build_requires("gperf/3.1")
+        if not tools.which("ruby"):
+            self.build_requires("ruby/2.3.7")
 
     def requirements(self):
         if self.options["with_webcrypto"]:
@@ -72,15 +84,14 @@ class QtWebKitConan(ConanFile):
             pass # TODO wait until https://github.com/qtwebkit/conan-woff2 will be deployed on bintray
 
     def source(self):
-        tools.get(f'{self.homepage}/releases/download/{self.name}-{self.version}/{self.name}-{self.version}.tar.xz',
+        tools.get(f'{self.homepage}/releases/download/{self.name}-{self.original_version}/{self.name}-{self.original_version}.tar.xz',
                   sha256='9ca126da9273664dd23a3ccd0c9bebceb7bb534bddd743db31caf6a5a6d4a9e6')
-        os.rename(f'{self.name}-{self.version}', self._source_subfolder)
+        os.rename(f'{self.name}-{self.original_version}', self._source_subfolder)
 
         # check recipe conistency
         tools.check_with_algorithm_sum("sha1", "patches/clang-11-jsc.patch", "03358658f12a895d00f5a7544618dc7019fb2882")
-        tools.check_with_algorithm_sum("sha1", "patches/OptionsQt.patch", "1ba5e8c5e5e22b5a0bb6e04632fee76a70d8d8ec")
+        tools.check_with_algorithm_sum("sha1", "patches/OptionsQt.patch", "d8587c6ce3d498f71888f90890780df8387b0f48")
         tools.check_with_algorithm_sum("sha1", "patches/cmake_version.patch", "030c7f2d1d6daceee54497eac6c734af457f10bf")
-
         # apply patches
         tools.patch(base_path=self._source_subfolder, patch_file="patches/clang-11-jsc.patch", strip=1)
 
@@ -90,10 +101,22 @@ class QtWebKitConan(ConanFile):
 
     def _configure_cmake(self):
         cmake = CMake(self)
+        cmake.generator = "Ninja"
+        cmake.verbose = True
 
         cmake.definitions["PORT"] = "Qt"
         cmake.definitions["ENABLE_DEVICE_ORIENTATION"] = "OFF"
         cmake.definitions["ENABLE_TEST_SUPPORT"] = "OFF"
+
+        if tools.os_info.is_windows:
+            cmake.definitions["CMAKE_C_USE_RESPONSE_FILE_FOR_OBJECTS"] = 1
+            cmake.definitions["CMAKE_CXX_USE_RESPONSE_FILE_FOR_OBJECTS"] = 1
+            cmake.definitions["CMAKE_C_RESPONSE_FILE_LINK_FLAG"] = "@"
+            cmake.definitions["CMAKE_CXX_RESPONSE_FILE_LINK_FLAG"] = "@"
+            cmake.definitions["CMAKE_NINJA_FORCE_RESPONSE_FILE"] = 1
+
+        if tools.os_info.is_linux:
+            cmake.definitions["USE_OPENGL"] = 1
 
         # TODO on linux we should check kernel version. On kernels < 3.4 bmalloc cannot be compiled
         if not self.options["with_bmalloc"]:
