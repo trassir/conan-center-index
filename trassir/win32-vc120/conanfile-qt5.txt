@@ -13,7 +13,7 @@ curl/7.39.0@trassir/sdk120
 dlib/19.1@trassir/sdk120
 dojo-toolkit/1.11.4@trassir/sdk120
 dshow/7.1@trassir/sdk120
-facesdk/2.11.2@trassir/sdk120
+facesdk/2.13.3@trassir/sdk120
 ffmpeg/3.2.14@trassir/sdk120
 freetype/2.3.11@trassir/sdk120
 gflags/2.1.2@trassir/sdk120
